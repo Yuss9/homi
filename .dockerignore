@@ -1,0 +1,17 @@
+.git
+.github
+.next
+dist
+node_modules
+coverage
+playwright-report
+test-results
+.env
+.env.*
+!.env.example
+.wrangler
+data
+work
+outputs
+*.log
+

@@ -1,0 +1,59 @@
+name: Bug report
+description: Report a reproducible problem using fictional data.
+title: "[Bug]: "
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for helping improve Homi. Do not include real addresses, private documents, credentials, tokens, or session cookies. Report security vulnerabilities privately as described in SECURITY.md.
+  - type: textarea
+    id: description
+    attributes:
+      label: What happened?
+      description: Explain the expected and observed behavior.
+      placeholder: I expected… but instead…
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Reproduction
+      description: Provide the smallest sequence of steps that reproduces the problem.
+      placeholder: |
+        1. Start Homi with…
+        2. Open…
+        3. Select…
+    validations:
+      required: true
+  - type: dropdown
+    id: deployment
+    attributes:
+      label: Deployment
+      options:
+        - Docker Compose
+        - Local development
+        - Other self-hosted environment
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Version or commit
+      placeholder: main at abc1234
+  - type: textarea
+    id: logs
+    attributes:
+      label: Sanitized logs
+      description: Remove all secrets and private data before pasting logs.
+      render: shell
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Safety check
+      options:
+        - label: I removed credentials, tokens, addresses, and private documents.
+          required: true
+        - label: This is not a security vulnerability.
+          required: true

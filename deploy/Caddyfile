@@ -1,0 +1,12 @@
+{$HOMI_DOMAIN} {
+  encode zstd gzip
+  reverse_proxy web:3000
+  header {
+    -Server
+    Strict-Transport-Security "max-age=63072000; includeSubDomains; preload"
+  }
+  request_body {
+    max_size 12MB
+  }
+}
+
