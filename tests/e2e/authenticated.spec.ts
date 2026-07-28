@@ -3,6 +3,7 @@ import { expect, test } from "@playwright/test";
 test("seeded member can sign in, use private files, and remains tenant-isolated", async ({
   page,
   request,
+  isMobile,
 }) => {
   await page.goto("/sign-in");
   await page.getByLabel("Email address").fill("alex@homi.local");
@@ -12,6 +13,24 @@ test("seeded member can sign in, use private files, and remains tenant-isolated"
   await expect(page).toHaveURL(/\/dashboard$/);
   await expect(page.getByRole("heading", { name: /Good morning, Alex/ })).toBeVisible();
   await expect(page.getByText("Cedar House is ready for the day.")).toBeVisible();
+
+  await page.goto("/");
+  const marketingHeader = page.locator("header");
+  if (!isMobile) {
+    await expect(
+      marketingHeader.getByRole("button", { name: "Sign out" }),
+    ).toBeVisible();
+  }
+  await expect(
+    marketingHeader.getByRole("link", { name: "Open dashboard" }),
+  ).toBeVisible();
+  await expect(marketingHeader.getByRole("link", { name: "Sign in" })).toHaveCount(0);
+  await expect(
+    marketingHeader.getByRole("link", { name: "Create account" }),
+  ).toHaveCount(0);
+
+  await page.goto("/sign-in");
+  await expect(page).toHaveURL(/\/dashboard$/);
 
   const homesResponse = await page.request.get("/api/homes");
   expect(homesResponse.status()).toBe(200);

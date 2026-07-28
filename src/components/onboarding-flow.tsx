@@ -115,7 +115,7 @@ export function OnboardingFlow({ initialStep = 0 }: { initialStep?: number }) {
     <main id="main" className="onboarding">
       <header className="onboarding-top">
         <Link href="/">
-          <Brand />
+          <Brand connected />
         </Link>
         <div className="progress-wrap">
           <span>

@@ -1,9 +1,11 @@
 import Link from "next/link";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import { Brand } from "@/src/components/brand";
+import { SignOutButton } from "@/src/components/sign-out-button";
+import { getOptionalSession } from "@/src/server/authorization";
 import type { ReactNode } from "react";
 
-export function InfoPage({
+export async function InfoPage({
   eyebrow,
   title,
   intro,
@@ -14,20 +16,36 @@ export function InfoPage({
   intro: string;
   children: ReactNode;
 }) {
+  const session = await getOptionalSession();
+  const verified = Boolean(session?.user.emailVerified);
+  const accountHref = verified ? "/dashboard" : "/verify-email";
+
   return (
     <div className="marketing-page">
       <header className="site-header">
         <div className="nav-wrap">
           <Link href="/">
-            <Brand />
+            <Brand connected={Boolean(session)} />
           </Link>
           <div className="nav-actions">
-            <Link className="text-link" href="/sign-in">
-              Sign in
-            </Link>
-            <Link className="button button-small" href="/sign-up">
-              Start your journal <ArrowRight size={15} />
-            </Link>
+            {session ? (
+              <>
+                <SignOutButton className="text-link session-sign-out" />
+                <Link className="button button-small" href={accountHref}>
+                  {verified ? "Open dashboard" : "Verify email"}{" "}
+                  <ArrowRight size={15} />
+                </Link>
+              </>
+            ) : (
+              <>
+                <Link className="text-link" href="/sign-in">
+                  Sign in
+                </Link>
+                <Link className="button button-small" href="/sign-up">
+                  Start your journal <ArrowRight size={15} />
+                </Link>
+              </>
+            )}
           </div>
         </div>
       </header>

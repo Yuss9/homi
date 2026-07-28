@@ -13,6 +13,8 @@ import {
   Wrench,
 } from "lucide-react";
 import { Reveal } from "@/src/components/marketing";
+import { SignOutButton } from "@/src/components/sign-out-button";
+import { getOptionalSession } from "@/src/server/authorization";
 import styles from "./page.module.css";
 
 export const metadata: Metadata = {
@@ -87,11 +89,21 @@ const jsonLd = {
   ],
 };
 
-function Wordmark({ light = false }: { light?: boolean }) {
+function Wordmark({
+  light = false,
+  connected = false,
+}: {
+  light?: boolean;
+  connected?: boolean;
+}) {
   return (
     <span className={`${styles.wordmark} ${light ? styles.wordmarkLight : ""}`}>
-      <span className={styles.wordmarkDot} aria-hidden="true" />
+      <span
+        className={`${styles.wordmarkDot} ${connected ? styles.wordmarkConnected : ""}`}
+        aria-hidden="true"
+      />
       Homi
+      {connected && <span className="sr-only"> — Connected</span>}
     </span>
   );
 }
@@ -162,7 +174,12 @@ function HomeJournal() {
   );
 }
 
-export default function MarketingHome() {
+export default async function MarketingHome() {
+  const session = await getOptionalSession();
+  const verified = Boolean(session?.user.emailVerified);
+  const accountHref = verified ? "/dashboard" : "/verify-email";
+  const accountLabel = verified ? "Open dashboard" : "Verify email";
+
   return (
     <div className={styles.page}>
       <script
@@ -173,7 +190,7 @@ export default function MarketingHome() {
       <header className={styles.header}>
         <div className={styles.nav}>
           <Link href="/" aria-label="Homi home">
-            <Wordmark />
+            <Wordmark connected={Boolean(session)} />
           </Link>
           <nav className={styles.navLinks} aria-label="Primary navigation">
             <Link href="/features">Features</Link>
@@ -181,13 +198,27 @@ export default function MarketingHome() {
             <Link href="/privacy">Privacy</Link>
           </nav>
           <div className={styles.navActions}>
-            <Link className={styles.signIn} href="/sign-in">
-              Sign in
-            </Link>
-            <Link className={styles.smallButton} href="/sign-up">
-              Create account
-              <ArrowRight size={15} />
-            </Link>
+            {session ? (
+              <>
+                <SignOutButton
+                  className={`${styles.signIn} ${styles.sessionButton}`}
+                />
+                <Link className={styles.smallButton} href={accountHref}>
+                  {accountLabel}
+                  <ArrowRight size={15} />
+                </Link>
+              </>
+            ) : (
+              <>
+                <Link className={styles.signIn} href="/sign-in">
+                  Sign in
+                </Link>
+                <Link className={styles.smallButton} href="/sign-up">
+                  Create account
+                  <ArrowRight size={15} />
+                </Link>
+              </>
+            )}
           </div>
         </div>
       </header>
@@ -202,8 +233,11 @@ export default function MarketingHome() {
               details that make a home easier to care for.
             </p>
             <div className={styles.heroActions}>
-              <Link className={styles.primaryButton} href="/sign-up">
-                Start your journal
+              <Link
+                className={styles.primaryButton}
+                href={session ? accountHref : "/sign-up"}
+              >
+                {session ? accountLabel : "Start your journal"}
                 <ArrowRight size={17} />
               </Link>
               <Link className={styles.quietLink} href="#journal">
@@ -403,15 +437,18 @@ export default function MarketingHome() {
 
         <section className={styles.finalCta}>
           <Reveal>
-            <Wordmark light />
+            <Wordmark light connected={Boolean(session)} />
             <h2>
               A well-kept home
               <br />
               starts with remembering.
             </h2>
             <p>Give every detail of your home a calm, private place.</p>
-            <Link className={styles.lightButton} href="/sign-up">
-              Start your home journal
+            <Link
+              className={styles.lightButton}
+              href={session ? accountHref : "/sign-up"}
+            >
+              {session ? accountLabel : "Start your home journal"}
               <ArrowRight size={17} />
             </Link>
           </Reveal>
@@ -421,14 +458,16 @@ export default function MarketingHome() {
       <footer className={styles.footer}>
         <div className={styles.footerTop}>
           <div>
-            <Wordmark />
+            <Wordmark connected={Boolean(session)} />
             <p>Your home, remembered.</p>
           </div>
           <nav aria-label="Product links">
             <strong>Product</strong>
             <Link href="/features">Features</Link>
             <Link href="/how-it-works">How it works</Link>
-            <Link href="/sign-up">Create account</Link>
+            <Link href={session ? accountHref : "/sign-up"}>
+              {session ? accountLabel : "Create account"}
+            </Link>
           </nav>
           <nav aria-label="Company links">
             <strong>Company</strong>

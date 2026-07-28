@@ -116,6 +116,26 @@ a {
   background: var(--brand);
   box-shadow: 0 0 0 4px color-mix(in srgb, var(--brand) 12%, transparent);
 }
+.brand-dot-connected {
+  background: #30c768;
+  box-shadow:
+    0 0 0 4px rgba(48, 199, 104, 0.14),
+    0 0 12px rgba(48, 199, 104, 0.36);
+  animation: connected-dot-pulse 2.4s ease-in-out infinite;
+}
+@keyframes connected-dot-pulse {
+  0%,
+  100% {
+    box-shadow:
+      0 0 0 4px rgba(48, 199, 104, 0.14),
+      0 0 8px rgba(48, 199, 104, 0.24);
+  }
+  50% {
+    box-shadow:
+      0 0 0 5px rgba(48, 199, 104, 0.1),
+      0 0 14px rgba(48, 199, 104, 0.42);
+  }
+}
 .brand-mark {
   width: 30px;
   height: 30px;
@@ -148,6 +168,17 @@ a {
 .desktop-nav a:hover,
 .text-link:hover {
   color: var(--ink);
+}
+.session-sign-out {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  font-family: inherit;
+}
+.session-sign-out:disabled {
+  cursor: wait;
+  opacity: 0.6;
 }
 .nav-actions {
   display: flex;

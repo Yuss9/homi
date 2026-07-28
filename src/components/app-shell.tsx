@@ -67,7 +67,7 @@ export function AppShell({
     <div className="app-body">
       <aside className="app-sidebar">
         <Link href="/dashboard">
-          <Brand />
+          <Brand connected />
         </Link>
         <button className="home-switcher" type="button">
           <span>

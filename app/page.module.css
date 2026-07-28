@@ -63,6 +63,29 @@
   box-shadow: 0 0 0 4px rgba(110, 130, 148, 0.12);
 }
 
+.wordmarkConnected,
+.wordmarkLight .wordmarkDot.wordmarkConnected {
+  background: #30c768;
+  box-shadow:
+    0 0 0 4px rgba(48, 199, 104, 0.14),
+    0 0 12px rgba(48, 199, 104, 0.36);
+  animation: connectedDotPulse 2.4s ease-in-out infinite;
+}
+
+@keyframes connectedDotPulse {
+  0%,
+  100% {
+    box-shadow:
+      0 0 0 4px rgba(48, 199, 104, 0.14),
+      0 0 8px rgba(48, 199, 104, 0.24);
+  }
+  50% {
+    box-shadow:
+      0 0 0 5px rgba(48, 199, 104, 0.1),
+      0 0 14px rgba(48, 199, 104, 0.42);
+  }
+}
+
 .wordmarkLight .wordmarkDot {
   background: #ccd5dd;
   box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.1);
@@ -92,6 +115,19 @@
   display: flex;
   align-items: center;
   gap: 24px;
+}
+
+.sessionButton {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.sessionButton:disabled {
+  cursor: wait;
+  opacity: 0.6;
 }
 
 .smallButton,
