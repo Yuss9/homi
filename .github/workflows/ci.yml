@@ -36,7 +36,7 @@ jobs:
       STORAGE_PROVIDER: local
       LOCAL_STORAGE_PATH: ./data/test-uploads
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: oven-sh/setup-bun@v2
         with: { bun-version: 1.2.13 }
       - uses: actions/setup-node@v4
