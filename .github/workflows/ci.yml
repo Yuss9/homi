@@ -26,9 +26,6 @@ jobs:
         options: >-
           --health-cmd "pg_isready -U homi -d homi_test"
           --health-interval 5s --health-timeout 5s --health-retries 10
-      smtp:
-        image: mailhog/mailhog:v1.0.1
-        ports: ["1025:1025"]
     env:
       NODE_ENV: test
       NEXT_PUBLIC_APP_URL: http://localhost:3000
@@ -38,8 +35,6 @@ jobs:
       CRON_SECRET: ci-only-cron-secret-long-enough
       STORAGE_PROVIDER: local
       LOCAL_STORAGE_PATH: ./data/test-uploads
-      SMTP_HOST: 127.0.0.1
-      SMTP_PORT: 1025
     steps:
       - uses: actions/checkout@v4
       - uses: oven-sh/setup-bun@v2
