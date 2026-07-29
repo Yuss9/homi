@@ -5,12 +5,17 @@ import { logger } from "../logger";
 import type { EmailTemplate } from "./templates";
 
 const env = getEnv();
-const transporter = nodemailer.createTransport({
-  host: env.SMTP_HOST,
-  port: env.SMTP_PORT,
-  secure: env.SMTP_PORT === 465,
-  auth: env.SMTP_USER ? { user: env.SMTP_USER, pass: env.SMTP_PASSWORD } : undefined,
-});
+const isTestTransport = env.NODE_ENV === "test";
+const transporter = isTestTransport
+  ? nodemailer.createTransport({ jsonTransport: true })
+  : nodemailer.createTransport({
+      host: env.SMTP_HOST,
+      port: env.SMTP_PORT,
+      secure: env.SMTP_PORT === 465,
+      auth: env.SMTP_USER
+        ? { user: env.SMTP_USER, pass: env.SMTP_PASSWORD }
+        : undefined,
+    });
 
 export async function sendEmail(to: string, template: EmailTemplate) {
   const result = await transporter.sendMail({
@@ -24,6 +29,6 @@ export async function sendEmail(to: string, template: EmailTemplate) {
 }
 
 export async function checkSmtp() {
+  if (isTestTransport) return true;
   return transporter.verify();
 }
-
