@@ -3,13 +3,13 @@ import { and, desc, eq } from "drizzle-orm";
 import { FileText, Package, Wrench } from "lucide-react";
 import { db } from "@/db";
 import { assets, documents, homeMembers, maintenanceRecords, repairRecords } from "@/db/schema";
-import { requireVerifiedUser } from "@/src/server/authorization";
+import { requireVerifiedPageUser } from "@/src/server/authorization/page";
 
 export const metadata = { title: "Asset details" };
 
 export default async function Page({ params }: { params: Promise<{ assetId: string }> }) {
   const { assetId } = await params;
-  const session = await requireVerifiedUser();
+  const session = await requireVerifiedPageUser();
   const [asset] = await db
     .select({ asset: assets })
     .from(assets)
