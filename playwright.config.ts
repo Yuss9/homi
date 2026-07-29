@@ -9,5 +9,5 @@ export default defineConfig({
     { name: "desktop", use: { ...devices["Desktop Chrome"] } },
     { name: "mobile", use: { ...devices["iPhone 13"], browserName: "chromium" } },
   ],
-  webServer: process.env.PLAYWRIGHT_BASE_URL ? undefined : { command: "npm run dev", url: "http://localhost:3000", reuseExistingServer: !process.env.CI, timeout: 120_000 },
+  webServer: process.env.PLAYWRIGHT_BASE_URL ? undefined : { command: "npm run dev", url: "http://localhost:3000", env: { NODE_ENV: "test" }, reuseExistingServer: !process.env.CI, timeout: 120_000 },
 });

@@ -2,12 +2,12 @@ import { desc, eq } from "drizzle-orm";
 import { CheckCircle2, History } from "lucide-react";
 import { db } from "@/db";
 import { homeMembers, maintenanceRecords, maintenanceTasks } from "@/db/schema";
-import { requireVerifiedUser } from "@/src/server/authorization";
+import { requireVerifiedPageUser } from "@/src/server/authorization/page";
 
 export const metadata = { title: "Maintenance history" };
 
 export default async function Page() {
-  const session = await requireVerifiedUser();
+  const session = await requireVerifiedPageUser();
   const records = await db
     .select({
       id: maintenanceRecords.id,

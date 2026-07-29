@@ -4,12 +4,12 @@ import { CalendarDays, FileText, Package, Plus, ShieldCheck, Wrench } from "luci
 import { db } from "@/db";
 import { assets, homeMembers, homes, maintenanceTasks, notifications } from "@/db/schema";
 import { CalmStatus } from "@/src/components/app-shell";
-import { requireVerifiedUser } from "@/src/server/authorization";
+import { requireVerifiedPageUser } from "@/src/server/authorization/page";
 
 export const metadata = { title: "Dashboard" };
 
 export default async function DashboardPage() {
-  const session = await requireVerifiedUser();
+  const session = await requireVerifiedPageUser();
   const [membership] = await db.select({ home: homes }).from(homeMembers).innerJoin(homes, eq(homes.id, homeMembers.homeId)).where(and(eq(homeMembers.userId, session.user.id), isNull(homes.archivedAt))).limit(1);
   const homeId = membership?.home.id;
   const upcoming = homeId ? await db.select().from(maintenanceTasks).where(and(eq(maintenanceTasks.homeId, homeId), isNull(maintenanceTasks.archivedAt))).orderBy(asc(maintenanceTasks.nextDueAt)).limit(3) : [];
@@ -37,4 +37,3 @@ export default async function DashboardPage() {
     </main>
   );
 }
-
