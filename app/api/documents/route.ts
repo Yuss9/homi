@@ -1,6 +1,11 @@
-import { desc, eq } from "drizzle-orm";
+import { desc, eq, inArray } from "drizzle-orm";
 import { db } from "@/db";
-import { documents, storedFiles } from "@/db/schema";
+import {
+  documents,
+  documentTagAssignments,
+  documentTags,
+  storedFiles,
+} from "@/db/schema";
 import { requireHomeAccess } from "@/src/server/authorization";
 import { errorResponse, requestId } from "@/src/server/http";
 
@@ -32,7 +37,40 @@ export async function GET(request: Request) {
       .where(eq(documents.homeId, homeId))
       .orderBy(desc(documents.createdAt))
       .limit(100);
-    return Response.json({ documents: rows, requestId: id });
+    const tagRows = rows.length
+      ? await db
+          .select({
+            documentId: documentTagAssignments.documentId,
+            id: documentTags.id,
+            name: documentTags.name,
+          })
+          .from(documentTagAssignments)
+          .innerJoin(
+            documentTags,
+            eq(documentTags.id, documentTagAssignments.tagId),
+          )
+          .where(
+            inArray(
+              documentTagAssignments.documentId,
+              rows.map((row) => row.id),
+            ),
+          )
+      : [];
+    const tagsByDocument = new Map<string, { id: string; name: string }[]>();
+    for (const tag of tagRows) {
+      const current = tagsByDocument.get(tag.documentId) ?? [];
+      current.push({ id: tag.id, name: tag.name });
+      tagsByDocument.set(tag.documentId, current);
+    }
+    return Response.json({
+      documents: rows.map((row) => ({
+        ...row,
+        tags: (tagsByDocument.get(row.id) ?? []).sort((a, b) =>
+          a.name.localeCompare(b.name),
+        ),
+      })),
+      requestId: id,
+    });
   } catch (error) {
     return errorResponse(error, id);
   }

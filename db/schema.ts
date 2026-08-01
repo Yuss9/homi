@@ -14,11 +14,20 @@ import {
 } from "drizzle-orm/pg-core";
 
 const timestamps = {
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
-  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
 };
 
-export const homeRole = pgEnum("home_role", ["OWNER", "ADMIN", "MEMBER", "VIEWER"]);
+export const homeRole = pgEnum("home_role", [
+  "OWNER",
+  "ADMIN",
+  "MEMBER",
+  "VIEWER",
+]);
 export const assetStatus = pgEnum("asset_status", [
   "ACTIVE",
   "NEEDS_ATTENTION",
@@ -34,7 +43,12 @@ export const frequencyType = pgEnum("frequency_type", [
   "YEARLY",
   "CUSTOM",
 ]);
-export const priority = pgEnum("priority", ["LOW", "MEDIUM", "HIGH", "CRITICAL"]);
+export const priority = pgEnum("priority", [
+  "LOW",
+  "MEDIUM",
+  "HIGH",
+  "CRITICAL",
+]);
 export const documentType = pgEnum("document_type", [
   "INVOICE",
   "WARRANTY",
@@ -70,7 +84,9 @@ export const user = pgTable(
     emailVerified: boolean("email_verified").default(false).notNull(),
     image: text("image"),
     onboardingStep: integer("onboarding_step").default(0).notNull(),
-    onboardingCompletedAt: timestamp("onboarding_completed_at", { withTimezone: true }),
+    onboardingCompletedAt: timestamp("onboarding_completed_at", {
+      withTimezone: true,
+    }),
     ...timestamps,
   },
   (table) => [uniqueIndex("user_email_unique").on(table.email)],
@@ -108,14 +124,21 @@ export const account = pgTable(
     accessToken: text("access_token"),
     refreshToken: text("refresh_token"),
     idToken: text("id_token"),
-    accessTokenExpiresAt: timestamp("access_token_expires_at", { withTimezone: true }),
-    refreshTokenExpiresAt: timestamp("refresh_token_expires_at", { withTimezone: true }),
+    accessTokenExpiresAt: timestamp("access_token_expires_at", {
+      withTimezone: true,
+    }),
+    refreshTokenExpiresAt: timestamp("refresh_token_expires_at", {
+      withTimezone: true,
+    }),
     scope: text("scope"),
     password: text("password"),
     ...timestamps,
   },
   (table) => [
-    uniqueIndex("account_provider_unique").on(table.providerId, table.accountId),
+    uniqueIndex("account_provider_unique").on(
+      table.providerId,
+      table.accountId,
+    ),
     index("account_user_idx").on(table.userId),
   ],
 );
@@ -154,7 +177,10 @@ export const homes = pgTable(
     archivedAt: timestamp("archived_at", { withTimezone: true }),
     ...timestamps,
   },
-  (table) => [index("homes_owner_idx").on(table.ownerId), index("homes_active_idx").on(table.archivedAt)],
+  (table) => [
+    index("homes_owner_idx").on(table.ownerId),
+    index("homes_active_idx").on(table.archivedAt),
+  ],
 );
 
 export const homeMembers = pgTable(
@@ -168,8 +194,12 @@ export const homeMembers = pgTable(
       .notNull()
       .references(() => user.id, { onDelete: "cascade" }),
     role: homeRole("role").notNull(),
-    invitedBy: uuid("invited_by").references(() => user.id, { onDelete: "set null" }),
-    joinedAt: timestamp("joined_at", { withTimezone: true }).defaultNow().notNull(),
+    invitedBy: uuid("invited_by").references(() => user.id, {
+      onDelete: "set null",
+    }),
+    joinedAt: timestamp("joined_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
     ...timestamps,
   },
   (table) => [
@@ -195,7 +225,9 @@ export const homeInvitations = pgTable(
     expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
     acceptedAt: timestamp("accepted_at", { withTimezone: true }),
     revokedAt: timestamp("revoked_at", { withTimezone: true }),
-    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
   },
   (table) => [
     uniqueIndex("invitation_token_hash_unique").on(table.tokenHash),
@@ -235,11 +267,16 @@ export const storedFiles = pgTable(
     uploadedBy: uuid("uploaded_by")
       .notNull()
       .references(() => user.id, { onDelete: "restrict" }),
-    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
     deletedAt: timestamp("deleted_at", { withTimezone: true }),
   },
   (table) => [
-    uniqueIndex("stored_file_key_unique").on(table.storageProvider, table.storageKey),
+    uniqueIndex("stored_file_key_unique").on(
+      table.storageProvider,
+      table.storageKey,
+    ),
     index("stored_files_uploader_idx").on(table.uploadedBy),
   ],
 );
@@ -251,7 +288,9 @@ export const assets = pgTable(
     homeId: uuid("home_id")
       .notNull()
       .references(() => homes.id, { onDelete: "cascade" }),
-    roomId: uuid("room_id").references(() => rooms.id, { onDelete: "set null" }),
+    roomId: uuid("room_id").references(() => rooms.id, {
+      onDelete: "set null",
+    }),
     name: text("name").notNull(),
     category: text("category").notNull(),
     brand: text("brand"),
@@ -267,7 +306,9 @@ export const assets = pgTable(
     warrantyEndDate: date("warranty_end_date"),
     expectedLifetimeYears: integer("expected_lifetime_years"),
     status: assetStatus("status").default("ACTIVE").notNull(),
-    imageFileId: uuid("image_file_id").references(() => storedFiles.id, { onDelete: "set null" }),
+    imageFileId: uuid("image_file_id").references(() => storedFiles.id, {
+      onDelete: "set null",
+    }),
     createdBy: uuid("created_by")
       .notNull()
       .references(() => user.id, { onDelete: "restrict" }),
@@ -288,7 +329,9 @@ export const maintenanceTasks = pgTable(
     homeId: uuid("home_id")
       .notNull()
       .references(() => homes.id, { onDelete: "cascade" }),
-    assetId: uuid("asset_id").references(() => assets.id, { onDelete: "set null" }),
+    assetId: uuid("asset_id").references(() => assets.id, {
+      onDelete: "set null",
+    }),
     title: text("title").notNull(),
     description: text("description"),
     frequencyType: frequencyType("frequency_type").notNull(),
@@ -297,7 +340,9 @@ export const maintenanceTasks = pgTable(
     lastCompletedAt: timestamp("last_completed_at", { withTimezone: true }),
     priority: priority("priority").default("MEDIUM").notNull(),
     estimatedDurationMinutes: integer("estimated_duration_minutes"),
-    assignedTo: uuid("assigned_to").references(() => user.id, { onDelete: "set null" }),
+    assignedTo: uuid("assigned_to").references(() => user.id, {
+      onDelete: "set null",
+    }),
     createdBy: uuid("created_by")
       .notNull()
       .references(() => user.id, { onDelete: "restrict" }),
@@ -316,23 +361,33 @@ export const maintenanceRecords = pgTable(
   {
     id: uuid("id").defaultRandom().primaryKey(),
     idempotencyKey: text("idempotency_key").notNull(),
-    taskId: uuid("task_id").references(() => maintenanceTasks.id, { onDelete: "set null" }),
-    assetId: uuid("asset_id").references(() => assets.id, { onDelete: "set null" }),
+    taskId: uuid("task_id").references(() => maintenanceTasks.id, {
+      onDelete: "set null",
+    }),
+    assetId: uuid("asset_id").references(() => assets.id, {
+      onDelete: "set null",
+    }),
     homeId: uuid("home_id")
       .notNull()
       .references(() => homes.id, { onDelete: "cascade" }),
     completedBy: uuid("completed_by")
       .notNull()
       .references(() => user.id, { onDelete: "restrict" }),
-    completedAt: timestamp("completed_at", { withTimezone: true }).defaultNow().notNull(),
+    completedAt: timestamp("completed_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
     notes: text("notes"),
     cost: numeric("cost", { precision: 12, scale: 2 }),
     currency: text("currency").default("EUR"),
     serviceProvider: text("service_provider"),
-    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
   },
   (table) => [
-    uniqueIndex("maintenance_record_idempotency_unique").on(table.idempotencyKey),
+    uniqueIndex("maintenance_record_idempotency_unique").on(
+      table.idempotencyKey,
+    ),
     index("maintenance_records_home_idx").on(table.homeId, table.completedAt),
     index("maintenance_records_task_idx").on(table.taskId),
   ],
@@ -375,7 +430,9 @@ export const documents = pgTable(
     homeId: uuid("home_id")
       .notNull()
       .references(() => homes.id, { onDelete: "cascade" }),
-    assetId: uuid("asset_id").references(() => assets.id, { onDelete: "set null" }),
+    assetId: uuid("asset_id").references(() => assets.id, {
+      onDelete: "set null",
+    }),
     uploadedBy: uuid("uploaded_by")
       .notNull()
       .references(() => user.id, { onDelete: "restrict" }),
@@ -396,6 +453,52 @@ export const documents = pgTable(
   ],
 );
 
+export const documentTags = pgTable(
+  "document_tags",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    homeId: uuid("home_id")
+      .notNull()
+      .references(() => homes.id, { onDelete: "cascade" }),
+    name: text("name").notNull(),
+    normalizedName: text("normalized_name").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (table) => [
+    uniqueIndex("document_tags_home_name_unique").on(
+      table.homeId,
+      table.normalizedName,
+    ),
+    index("document_tags_home_idx").on(table.homeId),
+  ],
+);
+
+export const documentTagAssignments = pgTable(
+  "document_tag_assignments",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    documentId: uuid("document_id")
+      .notNull()
+      .references(() => documents.id, { onDelete: "cascade" }),
+    tagId: uuid("tag_id")
+      .notNull()
+      .references(() => documentTags.id, { onDelete: "cascade" }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (table) => [
+    uniqueIndex("document_tag_assignment_unique").on(
+      table.documentId,
+      table.tagId,
+    ),
+    index("document_tag_assignments_document_idx").on(table.documentId),
+    index("document_tag_assignments_tag_idx").on(table.tagId),
+  ],
+);
+
 export const notifications = pgTable(
   "notifications",
   {
@@ -410,7 +513,9 @@ export const notifications = pgTable(
     actionUrl: text("action_url"),
     readAt: timestamp("read_at", { withTimezone: true }),
     dismissedAt: timestamp("dismissed_at", { withTimezone: true }),
-    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
   },
   (table) => [
     index("notifications_user_read_idx").on(table.userId, table.readAt),
@@ -427,14 +532,24 @@ export const notificationPreferences = pgTable(
       .references(() => user.id, { onDelete: "cascade" }),
     emailEnabled: boolean("email_enabled").default(true).notNull(),
     inAppEnabled: boolean("in_app_enabled").default(true).notNull(),
-    maintenanceReminderDays: integer("maintenance_reminder_days").default(7).notNull(),
-    warrantyReminderDays: integer("warranty_reminder_days").default(30).notNull(),
-    documentExpiryReminderDays: integer("document_expiry_reminder_days").default(30).notNull(),
-    weeklySummaryEnabled: boolean("weekly_summary_enabled").default(true).notNull(),
+    maintenanceReminderDays: integer("maintenance_reminder_days")
+      .default(7)
+      .notNull(),
+    warrantyReminderDays: integer("warranty_reminder_days")
+      .default(30)
+      .notNull(),
+    documentExpiryReminderDays: integer("document_expiry_reminder_days")
+      .default(30)
+      .notNull(),
+    weeklySummaryEnabled: boolean("weekly_summary_enabled")
+      .default(true)
+      .notNull(),
     timezone: text("timezone").default("UTC").notNull(),
     ...timestamps,
   },
-  (table) => [uniqueIndex("notification_preference_user_unique").on(table.userId)],
+  (table) => [
+    uniqueIndex("notification_preference_user_unique").on(table.userId),
+  ],
 );
 
 export const reminderDeliveries = pgTable(
@@ -453,7 +568,9 @@ export const reminderDeliveries = pgTable(
     deliveredAt: timestamp("delivered_at", { withTimezone: true }),
     error: text("error"),
     idempotencyKey: text("idempotency_key").notNull(),
-    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
   },
   (table) => [
     uniqueIndex("reminder_idempotency_unique").on(table.idempotencyKey),
@@ -465,15 +582,24 @@ export const auditLogs = pgTable(
   "audit_logs",
   {
     id: uuid("id").defaultRandom().primaryKey(),
-    actorId: uuid("actor_id").references(() => user.id, { onDelete: "set null" }),
-    homeId: uuid("home_id").references(() => homes.id, { onDelete: "set null" }),
+    actorId: uuid("actor_id").references(() => user.id, {
+      onDelete: "set null",
+    }),
+    homeId: uuid("home_id").references(() => homes.id, {
+      onDelete: "set null",
+    }),
     action: text("action").notNull(),
     targetType: text("target_type").notNull(),
     targetId: uuid("target_id"),
     requestId: text("request_id"),
     ipHash: text("ip_hash"),
-    metadata: jsonb("metadata").$type<Record<string, string | number | boolean | null>>(),
-    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+    metadata:
+      jsonb("metadata").$type<
+        Record<string, string | number | boolean | null>
+      >(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
   },
   (table) => [
     index("audit_home_created_idx").on(table.homeId, table.createdAt),
@@ -488,7 +614,9 @@ export const rateLimitEntries = pgTable(
     keyHash: text("key_hash").notNull(),
     action: text("action").notNull(),
     count: integer("count").default(1).notNull(),
-    windowStartedAt: timestamp("window_started_at", { withTimezone: true }).notNull(),
+    windowStartedAt: timestamp("window_started_at", {
+      withTimezone: true,
+    }).notNull(),
     expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
   },
   (table) => [
@@ -496,4 +624,3 @@ export const rateLimitEntries = pgTable(
     index("rate_limit_expiry_idx").on(table.expiresAt),
   ],
 );
-
