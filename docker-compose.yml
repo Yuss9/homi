@@ -76,6 +76,7 @@ services:
       retries: 10
 
   web:
+    image: ${HOMI_IMAGE:-homi:local}
     build: .
     restart: unless-stopped
     env_file: .env

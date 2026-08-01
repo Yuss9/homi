@@ -13,7 +13,25 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  validate:
+  quality:
+    runs-on: ubuntu-latest
+    env:
+      NODE_ENV: test
+      NEXT_PUBLIC_APP_URL: http://localhost:3000
+      BETTER_AUTH_SECRET: ci-only-secret-with-at-least-thirty-two-characters
+      CRON_SECRET: ci-only-cron-secret-long-enough
+      STORAGE_PROVIDER: local
+      LOCAL_STORAGE_PATH: ./data/test-uploads
+    steps:
+      - uses: actions/checkout@v7
+      - uses: oven-sh/setup-bun@v2
+        with: { bun-version: 1.2.13 }
+      - run: bun install --frozen-lockfile
+      - run: bun run typecheck
+      - run: bun run lint
+      - run: bun run test
+
+  application:
     runs-on: ubuntu-latest
     services:
       postgres:
@@ -39,16 +57,24 @@ jobs:
       - uses: actions/checkout@v7
       - uses: oven-sh/setup-bun@v2
         with: { bun-version: 1.2.13 }
-      - uses: actions/setup-node@v4
-        with: { node-version: 22, cache: npm }
       - run: bun install --frozen-lockfile
       - run: bun run db:migrate
-      - run: bun run typecheck
-      - run: bun run lint
-      - run: bun run test
       - run: bun run test:integration
       - run: bun run build
-      - run: docker build -t homi:ci .
       - run: bunx playwright install --with-deps chromium
       - run: bun run db:seed
       - run: bun run test:e2e --project=desktop
+
+  container:
+    needs: [quality, application]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: false
+          tags: homi:ci
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

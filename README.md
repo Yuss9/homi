@@ -37,6 +37,10 @@ or AI features.
 
 ## Quick start with Docker
 
+For a contributor-oriented walkthrough, including local services, branching,
+validation, and pull requests, read the
+[getting started guide](docs/getting-started.md).
+
 ### Requirements
 
 - Docker Desktop or Docker Engine with Compose
@@ -308,6 +312,19 @@ An example reverse proxy is available at
 [`deploy/Caddyfile`](deploy/Caddyfile). Backup guidance is in
 [`docs/backups.md`](docs/backups.md).
 
+Versioned multi-platform container images are published to the repository's
+GitHub Packages section after each GitHub Release. Pull a specific version and
+use it with the included Compose file:
+
+```bash
+docker pull ghcr.io/OWNER/homi:1.2.3
+HOMI_IMAGE=ghcr.io/OWNER/homi:1.2.3 docker compose up -d
+```
+
+Replace `OWNER` with the repository owner. See
+[`docs/releases.md`](docs/releases.md) for the complete automated release flow
+and required one-time GitHub settings.
+
 ## Known limitations
 
 - The default upload scanner is not a production antivirus implementation.
@@ -325,6 +342,10 @@ An example reverse proxy is available at
 Contributions are welcome. Read [CONTRIBUTING.md](CONTRIBUTING.md) before
 opening a pull request. Please keep test data fictional and avoid screenshots
 containing real home information.
+
+Changes are developed on focused branches and squash-merged into `main`.
+Conventional Commit pull request titles drive Release Please, the changelog,
+semantic version tags, GitHub Releases, and versioned GHCR images.
 
 ## License
 
