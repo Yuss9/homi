@@ -3,6 +3,7 @@ import { z } from "zod";
 import { db } from "@/db";
 import { homeMembers, notifications } from "@/db/schema";
 import { canManageMembers } from "@/src/server/authorization";
+import { membershipChangeReason } from "@/src/features/members/management";
 import { AppError } from "@/src/server/errors";
 import { errorResponse, requestId } from "@/src/server/http";
 
@@ -28,25 +29,10 @@ async function getTarget(memberId: string) {
 function assertCanChange(
   actor: { userId: string; role: "OWNER" | "ADMIN" | "MEMBER" | "VIEWER" },
   target: Awaited<ReturnType<typeof getTarget>>,
+  desiredRole?: "ADMIN" | "MEMBER" | "VIEWER",
 ) {
-  if (target.role === "OWNER")
-    throw new AppError(
-      "FORBIDDEN",
-      "The home owner cannot be changed or removed here.",
-      403,
-    );
-  if (target.userId === actor.userId)
-    throw new AppError(
-      "FORBIDDEN",
-      "You cannot change your own household access here.",
-      403,
-    );
-  if (actor.role === "ADMIN" && target.role === "ADMIN")
-    throw new AppError(
-      "FORBIDDEN",
-      "Only the owner can manage another admin.",
-      403,
-    );
+  const reason = membershipChangeReason(actor, target, desiredRole);
+  if (reason) throw new AppError("FORBIDDEN", reason, 403);
 }
 
 export async function PATCH(
@@ -58,17 +44,12 @@ export async function PATCH(
     const { memberId } = await context.params;
     const target = await getTarget(memberId);
     const { session, member } = await canManageMembers(target.homeId);
+    const body = roleInput.parse(await request.json());
     assertCanChange(
       { userId: session.user.id, role: member.role },
       target,
+      body.role,
     );
-    const body = roleInput.parse(await request.json());
-    if (body.role === "ADMIN" && member.role !== "OWNER")
-      throw new AppError(
-        "FORBIDDEN",
-        "Only the owner can promote an admin.",
-        403,
-      );
     const [updated] = await db
       .update(homeMembers)
       .set({ role: body.role, updatedAt: new Date() })
