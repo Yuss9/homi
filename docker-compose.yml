@@ -75,23 +75,41 @@ services:
       timeout: 3s
       retries: 10
 
+  clamav:
+    image: clamav/clamav:1.5
+    restart: unless-stopped
+    volumes:
+      - clamav_data:/var/lib/clamav
+    networks: [homi_internal]
+    healthcheck:
+      test: ["CMD", "clamdscan", "--ping", "1"]
+      interval: 10s
+      timeout: 5s
+      start_period: 120s
+      retries: 30
+
   web:
     image: ${HOMI_IMAGE:-homi:local}
     build: .
     restart: unless-stopped
     env_file: .env
+    environment:
+      CLAMAV_ENABLED: "true"
+      CLAMAV_HOST: clamav
+      CLAMAV_PORT: "3310"
     depends_on:
       postgres: { condition: service_healthy }
       minio-init: { condition: service_completed_successfully }
       mailpit: { condition: service_healthy }
       redis: { condition: service_healthy }
+      clamav: { condition: service_healthy }
     volumes:
       - uploads_data:/app/data/uploads
     networks: [homi_internal]
     ports:
       - "3000:3000"
     healthcheck:
-      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:3000/api/health"]
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:3000/health/live"]
       interval: 10s
       timeout: 5s
       start_period: 25s
@@ -120,4 +138,5 @@ volumes:
   postgres_data:
   minio_data:
   redis_data:
+  clamav_data:
   uploads_data:

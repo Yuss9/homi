@@ -12,11 +12,9 @@ import {
   profileAvatarUrl,
   safeExternalAvatarUrl,
 } from "@/src/server/profile/avatar";
+import { assertUploadIsClean } from "@/src/server/security/virus-scanner";
 import { getStorage } from "@/src/server/storage";
-import {
-  noOpVirusScanner,
-  validateUpload,
-} from "@/src/server/storage/validation";
+import { validateUpload } from "@/src/server/storage/validation";
 
 const avatarLimit = 5 * 1024 * 1024;
 
@@ -47,13 +45,7 @@ export async function POST(request: Request) {
         "Use a PNG, JPEG, WebP, GIF, or AVIF image.",
         400,
       );
-    const scan = await noOpVirusScanner.scan(bytes);
-    if (!scan.clean)
-      throw new AppError(
-        "VALIDATION_ERROR",
-        "The image did not pass the security scan.",
-        400,
-      );
+    await assertUploadIsClean(bytes, "image");
 
     const [current] = await db
       .select({ image: user.image })

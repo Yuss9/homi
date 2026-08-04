@@ -6,6 +6,7 @@ export type ErrorCode =
   | "VALIDATION_ERROR"
   | "RATE_LIMITED"
   | "CONFLICT"
+  | "SERVICE_UNAVAILABLE"
   | "INTERNAL_ERROR";
 
 export class AppError extends Error {
@@ -24,4 +25,3 @@ export function publicError(error: unknown): { code: ErrorCode; message: string 
   if (error instanceof AppError) return { code: error.code, message: error.message };
   return { code: "INTERNAL_ERROR", message: "Something went wrong. Please try again." };
 }
-

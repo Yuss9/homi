@@ -59,13 +59,3 @@ export async function validateUpload(
     extension: isPdf ? "pdf" : safeExtension(originalName, detected?.ext),
   };
 }
-
-export interface VirusScanner {
-  scan(bytes: Uint8Array): Promise<{ clean: boolean; reason?: string }>;
-}
-
-export const noOpVirusScanner: VirusScanner = {
-  async scan() {
-    return { clean: true };
-  },
-};
