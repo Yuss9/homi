@@ -6,7 +6,6 @@ import {
   MailPlus,
   ShieldCheck,
   UserMinus,
-  Users,
   X,
 } from "lucide-react";
 import { ActionFeedback } from "@/src/components/action-feedback";
@@ -99,7 +98,9 @@ export function MemberWorkspace() {
   );
 
   useEffect(() => {
-    if (homeId) void loadHousehold(homeId);
+    if (!homeId) return;
+    const timer = window.setTimeout(() => void loadHousehold(homeId), 0);
+    return () => window.clearTimeout(timer);
   }, [homeId, loadHousehold]);
 
   async function invite(event: FormEvent<HTMLFormElement>) {
