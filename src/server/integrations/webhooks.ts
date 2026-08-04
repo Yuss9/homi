@@ -1,10 +1,16 @@
 import "server-only";
 
-import { createHmac, randomBytes } from "node:crypto";
+import { createHmac } from "node:crypto";
 import { and, asc, eq, inArray, isNull, lte, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { webhookDeliveries, webhooks } from "@/db/connected-platform-schema";
+import {
+  generateWebhookSecret,
+  validateWebhookUrl,
+} from "@/src/features/integrations/security";
 import { decryptSecret } from "@/src/server/integrations/secrets";
+
+export { generateWebhookSecret, validateWebhookUrl };
 
 export const webhookEvents = [
   "maintenance.created",
@@ -17,41 +23,6 @@ export const webhookEvents = [
 ] as const;
 
 export type WebhookEvent = (typeof webhookEvents)[number];
-
-export function generateWebhookSecret() {
-  return `whsec_${randomBytes(32).toString("base64url")}`;
-}
-
-function isPrivateIpv4(hostname: string) {
-  const parts = hostname.split(".").map(Number);
-  if (parts.length !== 4 || parts.some((part) => !Number.isInteger(part)))
-    return false;
-  return (
-    parts[0] === 10 ||
-    parts[0] === 127 ||
-    (parts[0] === 169 && parts[1] === 254) ||
-    (parts[0] === 172 && parts[1] >= 16 && parts[1] <= 31) ||
-    (parts[0] === 192 && parts[1] === 168)
-  );
-}
-
-export function validateWebhookUrl(value: string) {
-  const url = new URL(value);
-  const hostname = url.hostname.toLowerCase();
-  if (url.protocol !== "https:") throw new Error("Webhook URLs must use HTTPS.");
-  if (
-    hostname === "localhost" ||
-    hostname.endsWith(".localhost") ||
-    hostname.endsWith(".local") ||
-    hostname === "::1" ||
-    hostname.startsWith("fc") ||
-    hostname.startsWith("fd") ||
-    hostname.startsWith("fe80:") ||
-    isPrivateIpv4(hostname)
-  )
-    throw new Error("Webhook URLs cannot target private network addresses.");
-  return url.toString();
-}
 
 export async function enqueueWebhookEvent(
   homeId: string,
@@ -135,7 +106,8 @@ export async function processWebhookDeliveries(deliveryIds?: string[]) {
         },
         body,
       });
-      if (!response.ok) throw new Error(`Webhook returned HTTP ${response.status}.`);
+      if (!response.ok)
+        throw new Error(`Webhook returned HTTP ${response.status}.`);
       await db.transaction(async (tx) => {
         await tx
           .update(webhookDeliveries)
@@ -149,7 +121,11 @@ export async function processWebhookDeliveries(deliveryIds?: string[]) {
           .where(eq(webhookDeliveries.id, row.delivery.id));
         await tx
           .update(webhooks)
-          .set({ failureCount: 0, lastSuccessAt: new Date(), updatedAt: new Date() })
+          .set({
+            failureCount: 0,
+            lastSuccessAt: new Date(),
+            updatedAt: new Date(),
+          })
           .where(eq(webhooks.id, row.webhook.id));
       });
     } catch (error) {
@@ -165,7 +141,10 @@ export async function processWebhookDeliveries(deliveryIds?: string[]) {
             status: permanentlyFailed ? "FAILED" : "PENDING",
             attempts,
             nextAttemptAt,
-            error: error instanceof Error ? error.message.slice(0, 1000) : "Delivery failed.",
+            error:
+              error instanceof Error
+                ? error.message.slice(0, 1000)
+                : "Delivery failed.",
           })
           .where(eq(webhookDeliveries.id, row.delivery.id));
         await tx
@@ -173,7 +152,9 @@ export async function processWebhookDeliveries(deliveryIds?: string[]) {
           .set({
             failureCount: row.webhook.failureCount + 1,
             disabledAt:
-              row.webhook.failureCount + 1 >= 10 ? new Date() : row.webhook.disabledAt,
+              row.webhook.failureCount + 1 >= 10
+                ? new Date()
+                : row.webhook.disabledAt,
             updatedAt: new Date(),
           })
           .where(eq(webhooks.id, row.webhook.id));
