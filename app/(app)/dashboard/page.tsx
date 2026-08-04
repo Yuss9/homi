@@ -1,16 +1,27 @@
 import Link from "next/link";
+import { cookies } from "next/headers";
 import { and, asc, eq, isNull } from "drizzle-orm";
 import { CalendarDays, FileText, Package, Plus, ShieldCheck, Wrench } from "lucide-react";
 import { db } from "@/db";
 import { assets, homeMembers, homes, maintenanceTasks, notifications } from "@/db/schema";
 import { CalmStatus } from "@/src/components/app-shell";
+import { resolveSelectedHomeId, selectedHomeCookie } from "@/src/features/homes/selection";
 import { requireVerifiedPageUser } from "@/src/server/authorization/page";
 
 export const metadata = { title: "Dashboard" };
 
 export default async function DashboardPage() {
   const session = await requireVerifiedPageUser();
-  const [membership] = await db.select({ home: homes }).from(homeMembers).innerJoin(homes, eq(homes.id, homeMembers.homeId)).where(and(eq(homeMembers.userId, session.user.id), isNull(homes.archivedAt))).limit(1);
+  const memberships = await db
+    .select({ home: homes })
+    .from(homeMembers)
+    .innerJoin(homes, eq(homes.id, homeMembers.homeId))
+    .where(and(eq(homeMembers.userId, session.user.id), isNull(homes.archivedAt)));
+  const selectedHomeId = resolveSelectedHomeId(
+    memberships.map(({ home }) => home),
+    (await cookies()).get(selectedHomeCookie)?.value,
+  );
+  const membership = memberships.find(({ home }) => home.id === selectedHomeId);
   const homeId = membership?.home.id;
   const upcoming = homeId ? await db.select().from(maintenanceTasks).where(and(eq(maintenanceTasks.homeId, homeId), isNull(maintenanceTasks.archivedAt))).orderBy(asc(maintenanceTasks.nextDueAt)).limit(3) : [];
   const assetRows = homeId ? await db.select({ id: assets.id }).from(assets).where(and(eq(assets.homeId, homeId), isNull(assets.archivedAt))).limit(100) : [];
