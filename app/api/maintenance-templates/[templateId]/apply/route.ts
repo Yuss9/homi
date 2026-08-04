@@ -1,7 +1,11 @@
-import { and, eq, isNull } from "drizzle-orm";
+import { and, asc, eq, isNull } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "@/db";
 import { maintenanceTemplates } from "@/db/high-value-schema";
+import {
+  maintenanceRecurrenceRules,
+  maintenanceTemplateChecklistItems,
+} from "@/db/maintenance-operations-schema";
 import { findSystemMaintenanceTemplate } from "@/src/features/maintenance/templates";
 import { requireHomeRole } from "@/src/server/authorization";
 import { AppError } from "@/src/server/errors";
@@ -44,6 +48,25 @@ export async function POST(
     if (!template)
       throw new AppError("NOT_FOUND", "Maintenance template not found.", 404);
 
+    const [checklist, recurrence] = custom
+      ? await Promise.all([
+          db
+            .select({
+              title: maintenanceTemplateChecklistItems.title,
+              required: maintenanceTemplateChecklistItems.required,
+            })
+            .from(maintenanceTemplateChecklistItems)
+            .where(eq(maintenanceTemplateChecklistItems.templateId, custom.id))
+            .orderBy(asc(maintenanceTemplateChecklistItems.sortOrder)),
+          db
+            .select({ rule: maintenanceRecurrenceRules.rule })
+            .from(maintenanceRecurrenceRules)
+            .where(eq(maintenanceRecurrenceRules.templateId, custom.id))
+            .limit(1)
+            .then((rows) => rows[0]),
+        ])
+      : [[], undefined];
+
     const task = await createMaintenanceTask(session.user.id, {
       homeId: body.homeId,
       assetId: body.assetId ?? null,
@@ -55,6 +78,8 @@ export async function POST(
       frequencyInterval: template.frequencyInterval,
       priority: template.priority,
       estimatedDurationMinutes: template.estimatedDurationMinutes ?? undefined,
+      checklist,
+      recurrenceRule: recurrence?.rule,
     });
 
     return Response.json({ task, requestId: id }, { status: 201 });
