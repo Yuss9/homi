@@ -14,7 +14,7 @@ export interface VirusScanner {
   check(): Promise<boolean>;
 }
 
-interface ClamAvOptions {
+export interface ClamAvOptions {
   host: string;
   port: number;
   timeoutMs: number;
@@ -59,11 +59,14 @@ export class ClamAvVirusScanner implements VirusScanner {
       };
       const succeed = (response: string) => {
         if (settled) return;
+        const trimmed = response.trim();
+        if (!trimmed) {
+          fail(new Error("ClamAV returned an empty response."));
+          return;
+        }
         settled = true;
         socket.destroy();
-        const trimmed = response.trim();
-        if (!trimmed) fail(new Error("ClamAV returned an empty response."));
-        else resolve(trimmed);
+        resolve(trimmed);
       };
 
       socket.setTimeout(this.options.timeoutMs);
