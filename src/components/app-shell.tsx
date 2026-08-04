@@ -1,9 +1,12 @@
 "use client";
+
+import type { ReactNode } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   Bell,
   CalendarDays,
+  Camera,
   CircleAlert,
   Coins,
   FileText,
@@ -19,24 +22,29 @@ import {
 } from "lucide-react";
 import { Brand } from "@/src/components/brand";
 import { GlobalCommandPalette } from "@/src/components/global-command-palette";
+import { PwaInstallPrompt } from "@/src/components/pwa-install-prompt";
 import { UserAvatar } from "@/src/components/user-avatar";
 import type { HomeHealth } from "@/src/features/dashboard/health";
 import type { SelectableHome } from "@/src/features/homes/selection";
+import { getDictionary } from "@/src/features/i18n/dictionaries";
+import type { SupportedLocale } from "@/src/server/services/experience";
 import { authClient } from "@/src/lib/auth-client";
-import type { ReactNode } from "react";
 
 const navigation = [
-  ["/dashboard", "Overview", LayoutDashboard],
-  ["/calendar", "Calendar", CalendarDays],
-  ["/homes", "Homes & rooms", House],
-  ["/assets", "Assets", Package],
-  ["/maintenance", "Maintenance", Wrench],
-  ["/maintenance/templates", "Care library", Library],
-  ["/repairs", "Repairs", Wrench],
-  ["/costs", "Costs", Coins],
-  ["/documents", "Documents", FileText],
-  ["/members", "Household", Users],
+  ["/dashboard", "overview", LayoutDashboard],
+  ["/calendar", "calendar", CalendarDays],
+  ["/homes", "homes", House],
+  ["/assets", "assets", Package],
+  ["/scan", "scan", Camera],
+  ["/maintenance", "maintenance", Wrench],
+  ["/maintenance/templates", "careLibrary", Library],
+  ["/repairs", "repairs", Wrench],
+  ["/costs", "costs", Coins],
+  ["/documents", "documents", FileText],
+  ["/members", "household", Users],
 ] as const;
+
+type NavigationKey = (typeof navigation)[number][1] | "settings";
 
 function NavLink({
   href,
@@ -71,13 +79,16 @@ export function AppShell({
   user,
   homes,
   selectedHomeId,
+  locale,
 }: {
   children: ReactNode;
   user: { name: string; email: string; avatarUrl?: string | null };
   homes: SelectableHome[];
   selectedHomeId: string;
+  locale: SupportedLocale;
 }) {
   const pathname = usePathname();
+  const dictionary = getDictionary(locale);
   const selectedHome = homes.find((home) => home.id === selectedHomeId);
 
   async function selectHome(homeId: string) {
@@ -88,6 +99,8 @@ export function AppShell({
     });
     if (response.ok) window.location.reload();
   }
+
+  const label = (key: NavigationKey) => dictionary[key];
 
   return (
     <div className="app-body">
@@ -100,9 +113,11 @@ export function AppShell({
             <House size={17} />
           </span>
           <span>
-            <strong>{selectedHome?.name ?? "No home yet"}</strong>
+            <strong>{selectedHome?.name ?? dictionary.noHome}</strong>
             <small>
-              {selectedHome?.city || selectedHome?.type || "Personal journal"}
+              {selectedHome?.city ||
+                selectedHome?.type ||
+                dictionary.personalJournal}
             </small>
           </span>
           <select
@@ -119,13 +134,17 @@ export function AppShell({
           </select>
         </label>
         <nav className="app-nav" aria-label="Workspace">
-          {navigation.map(([href, label, Icon]) => (
-            <NavLink key={href} href={href} label={label} icon={Icon} />
+          {navigation.map(([href, key, Icon]) => (
+            <NavLink key={href} href={href} label={label(key)} icon={Icon} />
           ))}
         </nav>
         <div className="sidebar-bottom">
           <nav className="app-nav">
-            <NavLink href="/settings" label="Settings" icon={Settings} />
+            <NavLink
+              href="/settings"
+              label={dictionary.settings}
+              icon={Settings}
+            />
           </nav>
           <div className="app-user">
             <UserAvatar name={user.name} avatarUrl={user.avatarUrl} />
@@ -139,10 +158,11 @@ export function AppShell({
       <div className="app-content">
         <header className="app-topbar">
           <GlobalCommandPalette selectedHomeId={selectedHomeId} />
+          <PwaInstallPrompt compact />
           <Link
             className="icon-button"
             href="/notifications"
-            aria-label="Notifications"
+            aria-label={dictionary.notifications}
           >
             <Bell size={19} />
           </Link>
@@ -156,26 +176,26 @@ export function AppShell({
               })
             }
           >
-            Sign out
+            {dictionary.signOut}
           </button>
         </header>
         {children}
       </div>
       <nav className="mobile-bottom-nav" aria-label="Mobile navigation">
         {[
-          ["/dashboard", "Home", LayoutDashboard],
-          ["/calendar", "Calendar", CalendarDays],
-          ["/assets", "Assets", Package],
-          ["/maintenance", "Tasks", Wrench],
-          ["/settings", "Settings", Settings],
-        ].map(([href, label, Icon]) => (
+          ["/dashboard", dictionary.home, LayoutDashboard],
+          ["/calendar", dictionary.calendar, CalendarDays],
+          ["/scan", dictionary.scan, Camera],
+          ["/maintenance", dictionary.tasks, Wrench],
+          ["/settings", dictionary.settings, Settings],
+        ].map(([href, mobileLabel, Icon]) => (
           <Link
             className={pathname === href ? "active" : ""}
             href={href as string}
             key={href as string}
           >
             <Icon size={19} />
-            {label as string}
+            {mobileLabel as string}
           </Link>
         ))}
       </nav>
