@@ -20,7 +20,9 @@ const avatarMetadataSchema = z.object({
 
 export type StoredAvatar = z.infer<typeof avatarMetadataSchema>;
 
-export function isAllowedAvatarMime(mimeType: string) {
+export function isAllowedAvatarMime(
+  mimeType: string,
+): mimeType is StoredAvatar["mimeType"] {
   return avatarMetadataSchema.shape.mimeType.safeParse(mimeType).success;
 }
 
