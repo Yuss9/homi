@@ -11,6 +11,7 @@ import {
   calculateNextDueDate,
   isDue,
 } from "../../features/maintenance/recurrence";
+import { requireAssetInHome, requireMemberInHome } from "../authorization";
 import { AppError } from "../errors";
 
 export const taskInput = z.object({
@@ -35,6 +36,8 @@ export const taskInput = z.object({
 
 export async function createMaintenanceTask(userId: string, raw: unknown) {
   const input = taskInput.parse(raw);
+  if (input.assetId) await requireAssetInHome(input.assetId, input.homeId);
+  if (input.assignedTo) await requireMemberInHome(input.assignedTo, input.homeId);
   const [task] = await db
     .insert(maintenanceTasks)
     .values({ ...input, createdBy: userId })
