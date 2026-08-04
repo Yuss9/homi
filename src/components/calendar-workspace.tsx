@@ -92,13 +92,25 @@ export function CalendarWorkspace() {
   useEffect(() => {
     if (!homeId) return;
     const { start, end } = monthRange(month);
-    setLoading(true);
-    void fetch(
-      `/api/calendar?homeId=${homeId}&start=${start.toISOString()}&end=${end.toISOString()}`,
-    )
-      .then((response) => response.json())
-      .then((payload) => setEvents(payload.events ?? []))
-      .finally(() => setLoading(false));
+    const controller = new AbortController();
+    const timer = window.setTimeout(() => {
+      setLoading(true);
+      void fetch(
+        `/api/calendar?homeId=${homeId}&start=${start.toISOString()}&end=${end.toISOString()}`,
+        { signal: controller.signal },
+      )
+        .then((response) => response.json())
+        .then((payload) => setEvents(payload.events ?? []))
+        .catch((error) => {
+          if (error instanceof DOMException && error.name === "AbortError") return;
+          setEvents([]);
+        })
+        .finally(() => setLoading(false));
+    }, 0);
+    return () => {
+      controller.abort();
+      window.clearTimeout(timer);
+    };
   }, [homeId, month]);
 
   const days = useMemo(() => {
