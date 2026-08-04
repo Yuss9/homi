@@ -3,6 +3,13 @@
 Notable changes to Homi are recorded here. This file is maintained by Release
 Please from Conventional Commit pull request titles.
 
+## [1.8.0](https://github.com/Yuss9/homi/compare/v1.7.0...v1.8.0) (2026-08-04)
+
+
+### Features
+
+* add household maintenance operations suite ([#29](https://github.com/Yuss9/homi/issues/29)) ([d5af9e7](https://github.com/Yuss9/homi/commit/d5af9e7f4e47864016cfa33276ea2c6396979e81))
+
 ## [1.7.0](https://github.com/Yuss9/homi/compare/v1.6.0...v1.7.0) (2026-08-04)
 
 
