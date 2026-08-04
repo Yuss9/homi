@@ -5,9 +5,11 @@ import {
   Bell,
   CalendarDays,
   CircleAlert,
+  Coins,
   FileText,
   House,
   LayoutDashboard,
+  Library,
   Package,
   Settings,
   ShieldCheck,
@@ -16,6 +18,7 @@ import {
   Wrench,
 } from "lucide-react";
 import { Brand } from "@/src/components/brand";
+import { GlobalCommandPalette } from "@/src/components/global-command-palette";
 import { UserAvatar } from "@/src/components/user-avatar";
 import type { HomeHealth } from "@/src/features/dashboard/health";
 import type { SelectableHome } from "@/src/features/homes/selection";
@@ -24,10 +27,13 @@ import type { ReactNode } from "react";
 
 const navigation = [
   ["/dashboard", "Overview", LayoutDashboard],
+  ["/calendar", "Calendar", CalendarDays],
   ["/homes", "Homes & rooms", House],
   ["/assets", "Assets", Package],
-  ["/maintenance", "Maintenance", CalendarDays],
+  ["/maintenance", "Maintenance", Wrench],
+  ["/maintenance/templates", "Care library", Library],
   ["/repairs", "Repairs", Wrench],
+  ["/costs", "Costs", Coins],
   ["/documents", "Documents", FileText],
   ["/members", "Household", Users],
 ] as const;
@@ -42,9 +48,16 @@ function NavLink({
   icon: typeof House;
 }) {
   const pathname = usePathname();
+  const moreSpecificMatch = navigation.some(
+    ([candidate]) =>
+      candidate !== href &&
+      candidate.startsWith(`${href}/`) &&
+      (pathname === candidate || pathname.startsWith(`${candidate}/`)),
+  );
   const active =
-    pathname === href ||
-    (href !== "/dashboard" && pathname.startsWith(`${href}/`));
+    !moreSpecificMatch &&
+    (pathname === href ||
+      (href !== "/dashboard" && pathname.startsWith(`${href}/`)));
   return (
     <Link className={active ? "active" : ""} href={href}>
       <Icon size={17} />
@@ -125,6 +138,7 @@ export function AppShell({
       </aside>
       <div className="app-content">
         <header className="app-topbar">
+          <GlobalCommandPalette selectedHomeId={selectedHomeId} />
           <Link
             className="icon-button"
             href="/notifications"
@@ -150,9 +164,9 @@ export function AppShell({
       <nav className="mobile-bottom-nav" aria-label="Mobile navigation">
         {[
           ["/dashboard", "Home", LayoutDashboard],
+          ["/calendar", "Calendar", CalendarDays],
           ["/assets", "Assets", Package],
-          ["/maintenance", "Tasks", CalendarDays],
-          ["/documents", "Files", FileText],
+          ["/maintenance", "Tasks", Wrench],
           ["/settings", "Settings", Settings],
         ].map(([href, label, Icon]) => (
           <Link
