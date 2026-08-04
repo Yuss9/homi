@@ -3,6 +3,13 @@
 Notable changes to Homi are recorded here. This file is maintained by Release
 Please from Conventional Commit pull request titles.
 
+## [1.2.0](https://github.com/Yuss9/homi/compare/v1.1.1...v1.2.0) (2026-08-04)
+
+
+### Features
+
+* make the home dashboard fully dynamic ([#15](https://github.com/Yuss9/homi/issues/15)) ([e422535](https://github.com/Yuss9/homi/commit/e422535ada3bffa38f955edcd4c35ea9ae3daa98))
+
 ## [1.1.1](https://github.com/Yuss9/homi/compare/v1.1.0...v1.1.1) (2026-08-04)
 
 
