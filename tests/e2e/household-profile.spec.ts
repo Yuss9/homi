@@ -1,12 +1,4 @@
-import { expect, test, type Page } from "@playwright/test";
-
-async function signIn(page: Page) {
-  await page.goto("/sign-in");
-  await page.getByLabel("Email address").fill("alex@homi.local");
-  await page.getByLabel("Password").fill("HomiDemo!2026");
-  await page.getByRole("button", { name: /^Sign in/ }).click();
-  await expect(page).toHaveURL(/\/dashboard$/);
-}
+import { expect, test } from "@playwright/test";
 
 const onePixelPng = Buffer.from(
   "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9Y9ZJ84AAAAASUVORK5CYII=",
@@ -16,7 +8,8 @@ const onePixelPng = Buffer.from(
 test("a user can update their household identity and invite several people", async ({
   page,
 }) => {
-  await signIn(page);
+  await page.goto("/dashboard");
+  await expect(page).toHaveURL(/\/dashboard$/);
   const suffix = crypto.randomUUID().slice(0, 8);
   const nickname = `Alex Household ${suffix}`;
 
