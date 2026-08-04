@@ -11,6 +11,12 @@ export {
   permissionMatrix,
   roles,
 } from "../../features/members/permissions";
+export {
+  requireAssetInHome,
+  requireDocumentInHome,
+  requireMemberInHome,
+  requireRoomInHome,
+} from "./resources";
 
 export async function getOptionalSession() {
   return auth.api.getSession({ headers: await headers() });
