@@ -6,30 +6,75 @@ on:
     branches: [main]
 
 permissions:
-  contents: write
+  contents: read
 
 concurrency:
   group: ci-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  regenerate-lockfile:
+  quality:
+    runs-on: ubuntu-latest
+    env:
+      NODE_ENV: test
+      NEXT_PUBLIC_APP_URL: http://localhost:3000
+      BETTER_AUTH_SECRET: ci-only-secret-with-at-least-thirty-two-characters
+      CRON_SECRET: ci-only-cron-secret-long-enough
+      STORAGE_PROVIDER: local
+      LOCAL_STORAGE_PATH: ./data/test-uploads
+    steps:
+      - uses: actions/checkout@v7
+      - uses: oven-sh/setup-bun@v2
+        with: { bun-version: 1.3.14 }
+      - run: bun install --frozen-lockfile
+      - run: bun run typecheck
+      - run: bun run lint
+      - run: bun run test
+
+  application:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_DB: homi_test
+          POSTGRES_USER: homi
+          POSTGRES_PASSWORD: homi-test
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U homi -d homi_test"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      NODE_ENV: test
+      NEXT_PUBLIC_APP_URL: http://localhost:3000
+      DATABASE_URL: postgresql://homi:homi-test@127.0.0.1:5432/homi_test
+      TEST_DATABASE_URL: postgresql://homi:homi-test@127.0.0.1:5432/homi_test
+      BETTER_AUTH_SECRET: ci-only-secret-with-at-least-thirty-two-characters
+      CRON_SECRET: ci-only-cron-secret-long-enough
+      STORAGE_PROVIDER: local
+      LOCAL_STORAGE_PATH: ./data/test-uploads
+    steps:
+      - uses: actions/checkout@v7
+      - uses: oven-sh/setup-bun@v2
+        with: { bun-version: 1.3.14 }
+      - run: bun install --frozen-lockfile
+      - run: bun run db:migrate
+      - run: bun run test:integration
+      - run: bun run build
+      - run: bunx playwright install --with-deps chromium
+      - run: bun run db:seed
+      - run: bun run test:e2e --project=desktop
+
+  container:
+    needs: [quality, application]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/build-push-action@v6
         with:
-          ref: ${{ github.head_ref || github.ref_name }}
-      - uses: oven-sh/setup-bun@v2
-        with: { bun-version: 1.3.14 }
-      - run: bun install
-      - name: Commit canonical lockfile
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add bun.lock
-          if git diff --cached --quiet; then
-            echo "Lockfile is already canonical."
-            exit 0
-          fi
-          git commit -m "fix(deps): regenerate Bun lockfile"
-          git push origin "HEAD:${{ github.head_ref || github.ref_name }}"
+          context: .
+          push: false
+          tags: homi:ci
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
