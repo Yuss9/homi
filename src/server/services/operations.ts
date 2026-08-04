@@ -119,14 +119,6 @@ async function providerInHome(providerId: string, homeId: string) {
   return provider;
 }
 
-async function countRows<TColumn>(table: TColumn, condition: ReturnType<typeof eq>) {
-  const rows = await db
-    .select({ count: sql<number>`count(*)::int` })
-    .from(table as never)
-    .where(condition);
-  return rows[0]?.count ?? 0;
-}
-
 async function notifyLowStock(
   homeId: string,
   item: typeof inventoryItems.$inferSelect,
@@ -490,33 +482,33 @@ export async function performOperation(raw: unknown) {
     await requireHomeRole(homeId, ["OWNER", "ADMIN", "MEMBER"]);
     if (input.targetType === "TASK") {
       await taskInHome(input.targetId, homeId);
-      const sortOrder = await countRows(
-        maintenanceTaskChecklistItems,
-        eq(maintenanceTaskChecklistItems.taskId, input.targetId),
-      );
+      const counts = await db
+        .select({ count: sql<number>`count(*)::int` })
+        .from(maintenanceTaskChecklistItems)
+        .where(eq(maintenanceTaskChecklistItems.taskId, input.targetId));
       const [item] = await db
         .insert(maintenanceTaskChecklistItems)
         .values({
           taskId: input.targetId,
           title: input.title,
           required: input.required,
-          sortOrder,
+          sortOrder: counts[0]?.count ?? 0,
         })
         .returning();
       return { item };
     }
     await templateInHome(input.targetId, homeId);
-    const sortOrder = await countRows(
-      maintenanceTemplateChecklistItems,
-      eq(maintenanceTemplateChecklistItems.templateId, input.targetId),
-    );
+    const counts = await db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(maintenanceTemplateChecklistItems)
+      .where(eq(maintenanceTemplateChecklistItems.templateId, input.targetId));
     const [item] = await db
       .insert(maintenanceTemplateChecklistItems)
       .values({
         templateId: input.targetId,
         title: input.title,
         required: input.required,
-        sortOrder,
+        sortOrder: counts[0]?.count ?? 0,
       })
       .returning();
     return { item };
@@ -532,9 +524,7 @@ export async function performOperation(raw: unknown) {
       "MEMBER",
     ]);
     const [item] = await db
-      .select({
-        taskHomeId: maintenanceTasks.homeId,
-      })
+      .select({ taskHomeId: maintenanceTasks.homeId })
       .from(maintenanceTaskChecklistItems)
       .innerJoin(
         maintenanceTasks,
@@ -729,11 +719,7 @@ export async function performOperation(raw: unknown) {
     }
     const [provider] = await db
       .insert(serviceProviders)
-      .values({
-        homeId,
-        ...input,
-        createdBy: session.user.id,
-      })
+      .values({ homeId, ...input, createdBy: session.user.id })
       .returning();
     return { provider };
   }
@@ -1000,13 +986,13 @@ export async function performOperation(raw: unknown) {
     await requireHomeRole(homeId, ["OWNER", "ADMIN", "MEMBER"]);
     await projectInHome(input.projectId, homeId);
     if (input.assignedTo) await requireMemberInHome(input.assignedTo, homeId);
-    const sortOrder = await countRows(
-      renovationTasks,
-      eq(renovationTasks.projectId, input.projectId),
-    );
+    const counts = await db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(renovationTasks)
+      .where(eq(renovationTasks.projectId, input.projectId));
     const [task] = await db
       .insert(renovationTasks)
-      .values({ ...input, sortOrder })
+      .values({ ...input, sortOrder: counts[0]?.count ?? 0 })
       .returning();
     return { task };
   }
