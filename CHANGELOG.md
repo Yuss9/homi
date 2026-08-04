@@ -3,6 +3,13 @@
 Notable changes to Homi are recorded here. This file is maintained by Release
 Please from Conventional Commit pull request titles.
 
+## [1.6.0](https://github.com/Yuss9/homi/compare/v1.5.0...v1.6.0) (2026-08-04)
+
+
+### Features
+
+* secure uploads and split health probes ([#25](https://github.com/Yuss9/homi/issues/25)) ([fa24448](https://github.com/Yuss9/homi/commit/fa24448195814e003bdfeccc4e6363e68c46b8b7))
+
 ## [1.5.0](https://github.com/Yuss9/homi/compare/v1.4.0...v1.5.0) (2026-08-04)
 
 
