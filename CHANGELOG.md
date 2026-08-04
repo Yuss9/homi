@@ -3,6 +3,13 @@
 Notable changes to Homi are recorded here. This file is maintained by Release
 Please from Conventional Commit pull request titles.
 
+## [1.7.0](https://github.com/Yuss9/homi/compare/v1.6.0...v1.7.0) (2026-08-04)
+
+
+### Features
+
+* add connected mobile and home automation platform ([#27](https://github.com/Yuss9/homi/issues/27)) ([c182af1](https://github.com/Yuss9/homi/commit/c182af1afc8ca9e14a0f3887461b79012122ddce))
+
 ## [1.6.0](https://github.com/Yuss9/homi/compare/v1.5.0...v1.6.0) (2026-08-04)
 
 
