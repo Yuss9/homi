@@ -11,8 +11,9 @@ type BeforeInstallPromptEvent = Event & {
 
 function standalone() {
   return (
-    window.matchMedia("(display-mode: standalone)").matches ||
-    Boolean((navigator as Navigator & { standalone?: boolean }).standalone)
+    typeof window !== "undefined" &&
+    (window.matchMedia("(display-mode: standalone)").matches ||
+      Boolean((navigator as Navigator & { standalone?: boolean }).standalone))
   );
 }
 
@@ -20,12 +21,14 @@ export function PwaInstallPrompt({ compact = false }: { compact?: boolean }) {
   const [installEvent, setInstallEvent] =
     useState<BeforeInstallPromptEvent | null>(null);
   const [open, setOpen] = useState(false);
-  const [installed, setInstalled] = useState(false);
-  const [isIos, setIsIos] = useState(false);
+  const [installed, setInstalled] = useState(standalone);
+  const [isIos] = useState(
+    () =>
+      typeof navigator !== "undefined" &&
+      /iphone|ipad|ipod/i.test(navigator.userAgent),
+  );
 
   useEffect(() => {
-    setInstalled(standalone());
-    setIsIos(/iphone|ipad|ipod/i.test(navigator.userAgent));
     const onBeforeInstall = (event: Event) => {
       event.preventDefault();
       setInstallEvent(event as BeforeInstallPromptEvent);
@@ -115,7 +118,9 @@ export function PwaInstallPrompt({ compact = false }: { compact?: boolean }) {
             {isIos ? (
               <ol className="install-steps">
                 <li>
-                  <span><Share size={18} /></span>
+                  <span>
+                    <Share size={18} />
+                  </span>
                   Tap <strong>Share</strong> in Safari.
                 </li>
                 <li>
@@ -130,12 +135,17 @@ export function PwaInstallPrompt({ compact = false }: { compact?: boolean }) {
             ) : (
               <ol className="install-steps">
                 <li>
-                  <span><MoreVertical size={18} /></span>
+                  <span>
+                    <MoreVertical size={18} />
+                  </span>
                   Open the browser menu.
                 </li>
                 <li>
-                  <span><Download size={18} /></span>
-                  Choose <strong>Install app</strong> or <strong>Add to Home screen</strong>.
+                  <span>
+                    <Download size={18} />
+                  </span>
+                  Choose <strong>Install app</strong> or{" "}
+                  <strong>Add to Home screen</strong>.
                 </li>
                 <li>
                   <span>✓</span>
