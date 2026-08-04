@@ -1,5 +1,7 @@
 import { expect, test } from "@playwright/test";
 
+test.use({ storageState: { cookies: [], origins: [] } });
+
 test("seeded member can sign in, use private files, and remains tenant-isolated", async ({
   page,
   request,
