@@ -9,6 +9,7 @@ import {
   lt,
   ne,
   or,
+  sql,
 } from "drizzle-orm";
 import {
   CalendarDays,
@@ -117,7 +118,12 @@ export default async function DashboardPage() {
       db
         .select({ value: count() })
         .from(documents)
-        .where(eq(documents.homeId, homeId)),
+        .where(
+          and(
+            eq(documents.homeId, homeId),
+            sql`"documents"."archived_at" is null`,
+          ),
+        ),
       db
         .select({ value: count() })
         .from(notifications)
@@ -169,6 +175,7 @@ export default async function DashboardPage() {
         .where(
           and(
             eq(repairRecords.homeId, homeId),
+            sql`"repair_records"."archived_at" is null`,
             ne(repairRecords.status, "COMPLETED"),
             ne(repairRecords.status, "CANCELLED"),
           ),
@@ -179,6 +186,7 @@ export default async function DashboardPage() {
         .where(
           and(
             eq(documents.homeId, homeId),
+            sql`"documents"."archived_at" is null`,
             lt(documents.expiryDate, today),
           ),
         ),
@@ -260,65 +268,30 @@ export default async function DashboardPage() {
               const overdue = task.nextDueAt.getTime() < now.getTime();
               return (
                 <div className="dash-task" key={task.id}>
-                  <span>
-                    <Wrench size={16} />
-                  </span>
+                  <span><Wrench size={16} /></span>
                   <div>
                     <strong>{task.title}</strong>
-                    <small>
-                      {overdue ? "overdue · " : ""}
-                      {task.priority.toLowerCase()} priority
-                    </small>
+                    <small>{overdue ? "overdue · " : ""}{task.priority.toLowerCase()} priority</small>
                   </div>
-                  <time>
-                    {new Intl.DateTimeFormat("en", {
-                      month: "short",
-                      day: "numeric",
-                      timeZone,
-                    }).format(task.nextDueAt)}
-                  </time>
+                  <time>{new Intl.DateTimeFormat("en", { month: "short", day: "numeric", timeZone }).format(task.nextDueAt)}</time>
                 </div>
               );
             })
           ) : (
             <div className="dash-task">
-              <span>
-                <CalendarDays size={16} />
-              </span>
-              <div>
-                <strong>No maintenance scheduled</strong>
-                <small>Your schedule is clear.</small>
-              </div>
+              <span><CalendarDays size={16} /></span>
+              <div><strong>No maintenance scheduled</strong><small>Your schedule is clear.</small></div>
             </div>
           )}
         </section>
 
         <section className="dash-card">
-          <div className="dash-card-head">
-            <h2>At a glance</h2>
-            <Link href="/assets">Open home</Link>
-          </div>
+          <div className="dash-card-head"><h2>At a glance</h2><Link href="/assets">Open home</Link></div>
           <div className="summary-grid">
-            <div className="summary-cell">
-              <Package size={16} />
-              <strong>{metrics.assets}</strong>
-              <span>Assets</span>
-            </div>
-            <div className="summary-cell">
-              <CalendarDays size={16} />
-              <strong>{metrics.tasks}</strong>
-              <span>Tasks</span>
-            </div>
-            <div className="summary-cell">
-              <FileText size={16} />
-              <strong>{metrics.documents}</strong>
-              <span>Documents</span>
-            </div>
-            <div className="summary-cell">
-              <ShieldCheck size={16} />
-              <strong>{metrics.unread}</strong>
-              <span>Notices</span>
-            </div>
+            <div className="summary-cell"><Package size={16} /><strong>{metrics.assets}</strong><span>Assets</span></div>
+            <div className="summary-cell"><CalendarDays size={16} /><strong>{metrics.tasks}</strong><span>Tasks</span></div>
+            <div className="summary-cell"><FileText size={16} /><strong>{metrics.documents}</strong><span>Documents</span></div>
+            <div className="summary-cell"><ShieldCheck size={16} /><strong>{metrics.unread}</strong><span>Notices</span></div>
           </div>
         </section>
       </div>
