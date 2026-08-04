@@ -1,3 +1,7 @@
+"use client";
+
+import { useState } from "react";
+
 type UserAvatarProps = {
   name: string;
   avatarUrl?: string | null;
@@ -5,25 +9,42 @@ type UserAvatarProps = {
 };
 
 export function UserAvatar({ name, avatarUrl, large = false }: UserAvatarProps) {
-  const initials = name
-    .trim()
-    .split(/\s+/)
-    .slice(0, 2)
-    .map((part) => part[0])
-    .join("")
-    .toUpperCase();
+  const [failedUrl, setFailedUrl] = useState("");
+  const [loadedUrl, setLoadedUrl] = useState("");
+  const initials =
+    name
+      .trim()
+      .split(/\s+/)
+      .slice(0, 2)
+      .map((part) => part[0])
+      .join("")
+      .toUpperCase() || "?";
+  const showImage = Boolean(avatarUrl && failedUrl !== avatarUrl);
+  const loading = Boolean(showImage && loadedUrl !== avatarUrl);
+
   return (
     <span
-      className={`user-avatar ${large ? "user-avatar-large" : ""} ${avatarUrl ? "has-image" : ""}`}
+      className={`user-avatar ${large ? "user-avatar-large" : ""} ${showImage ? "has-image" : ""}`}
       role="img"
       aria-label={`${name}'s profile photo`}
-      style={
-        avatarUrl
-          ? { backgroundImage: `url(${JSON.stringify(avatarUrl)})` }
-          : undefined
-      }
+      data-loading={loading ? "true" : "false"}
     >
-      {!avatarUrl && initials}
+      {showImage && avatarUrl ? (
+        // A native image keeps authenticated same-origin requests intact and
+        // lets us recover gracefully when storage is briefly unavailable.
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          key={avatarUrl}
+          src={avatarUrl}
+          alt=""
+          decoding="async"
+          loading={large ? "eager" : "lazy"}
+          onLoad={() => setLoadedUrl(avatarUrl)}
+          onError={() => setFailedUrl(avatarUrl)}
+        />
+      ) : (
+        initials
+      )}
     </span>
   );
 }
