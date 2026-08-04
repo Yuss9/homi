@@ -1,0 +1,7 @@
+{
+  "name": "Homi",
+  "render_readme": true,
+  "homeassistant": "2025.1.0",
+  "zip_release": false,
+  "filename": "homi.zip"
+}
