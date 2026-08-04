@@ -47,6 +47,15 @@ export const envSchema = z
       .int()
       .positive()
       .default(10 * 1024 * 1024),
+    CLAMAV_ENABLED: z.enum(["true", "false"]).default("false"),
+    CLAMAV_HOST: z.string().trim().min(1).default("127.0.0.1"),
+    CLAMAV_PORT: z.coerce.number().int().min(1).max(65535).default(3310),
+    CLAMAV_TIMEOUT_MS: z.coerce
+      .number()
+      .int()
+      .min(1000)
+      .max(120_000)
+      .default(10_000),
     CRON_SECRET: z
       .string()
       .min(24)
