@@ -66,13 +66,28 @@ export function HomeWorkspace() {
   }
 
   useEffect(() => {
-    void loadHomes();
+    void fetch("/api/homes")
+      .then((response) => response.json())
+      .then((payload: { homes?: Home[] }) => {
+        const next = payload.homes ?? [];
+        setHomes(next);
+        setHomeId(next[0]?.id ?? "");
+      });
   }, []);
 
   useEffect(() => {
-    void loadRooms(homeId);
-    setEditingRoomId("");
+    if (!homeId) return;
+    void fetch(`/api/rooms?homeId=${homeId}`)
+      .then((response) => response.json())
+      .then((payload: { rooms?: Room[] }) => setRooms(payload.rooms ?? []));
   }, [homeId]);
+
+  function selectHome(selectedId: string) {
+    setEditingHomeId("");
+    setEditingRoomId("");
+    setRooms([]);
+    setHomeId(selectedId);
+  }
 
   async function addHome(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -231,11 +246,13 @@ export function HomeWorkspace() {
           <div className="animated-list">
             {homes.map((home) => (
               <div className="dash-task has-action" key={home.id}>
-                <span><House size={16} /></span>
+                <span>
+                  <House size={16} />
+                </span>
                 <button
                   className="resource-button"
                   type="button"
-                  onClick={() => setHomeId(home.id)}
+                  onClick={() => selectHome(home.id)}
                 >
                   <strong>{home.name}</strong>
                   <small>
@@ -247,8 +264,9 @@ export function HomeWorkspace() {
             ))}
           </div>
 
-          {selectedHome && canManageHome && (
-            editingHomeId === selectedHome.id ? (
+          {selectedHome &&
+            canManageHome &&
+            (editingHomeId === selectedHome.id ? (
               <form className="auth-form compact-form" onSubmit={saveHome}>
                 <div className="dash-card-head">
                   <h2>Edit home</h2>
@@ -261,64 +279,285 @@ export function HomeWorkspace() {
                     <X size={16} />
                   </button>
                 </div>
-                <div className="field"><label htmlFor="edit-home-name">Name</label><input id="edit-home-name" name="name" defaultValue={selectedHome.name} required /></div>
-                <div className="field"><label htmlFor="edit-home-type">Type</label><select id="edit-home-type" name="type" defaultValue={selectedHome.type}><option value="HOUSE">House</option><option value="APARTMENT">Apartment</option><option value="OTHER">Other</option></select></div>
-                <div className="field"><label htmlFor="edit-home-address">Address</label><input id="edit-home-address" name="addressLine" defaultValue={selectedHome.addressLine ?? ""} /></div>
-                <div className="field"><label htmlFor="edit-home-city">City</label><input id="edit-home-city" name="city" defaultValue={selectedHome.city ?? ""} /></div>
-                <div className="field"><label htmlFor="edit-home-postal">Postal code</label><input id="edit-home-postal" name="postalCode" defaultValue={selectedHome.postalCode ?? ""} /></div>
-                <div className="field"><label htmlFor="edit-home-country">Country</label><input id="edit-home-country" name="country" defaultValue={selectedHome.country ?? ""} /></div>
-                <div className="field"><label htmlFor="edit-home-year">Construction year</label><input id="edit-home-year" name="constructionYear" type="number" min="1200" max={new Date().getFullYear() + 2} defaultValue={selectedHome.constructionYear ?? ""} /></div>
-                <div className="field"><label htmlFor="edit-home-timezone">Timezone</label><input id="edit-home-timezone" name="timezone" defaultValue={selectedHome.timezone} /></div>
+                <div className="field">
+                  <label htmlFor="edit-home-name">Name</label>
+                  <input
+                    id="edit-home-name"
+                    name="name"
+                    defaultValue={selectedHome.name}
+                    required
+                  />
+                </div>
+                <div className="field">
+                  <label htmlFor="edit-home-type">Type</label>
+                  <select
+                    id="edit-home-type"
+                    name="type"
+                    defaultValue={selectedHome.type}
+                  >
+                    <option value="HOUSE">House</option>
+                    <option value="APARTMENT">Apartment</option>
+                    <option value="OTHER">Other</option>
+                  </select>
+                </div>
+                <div className="field">
+                  <label htmlFor="edit-home-address">Address</label>
+                  <input
+                    id="edit-home-address"
+                    name="addressLine"
+                    defaultValue={selectedHome.addressLine ?? ""}
+                  />
+                </div>
+                <div className="field">
+                  <label htmlFor="edit-home-city">City</label>
+                  <input
+                    id="edit-home-city"
+                    name="city"
+                    defaultValue={selectedHome.city ?? ""}
+                  />
+                </div>
+                <div className="field">
+                  <label htmlFor="edit-home-postal">Postal code</label>
+                  <input
+                    id="edit-home-postal"
+                    name="postalCode"
+                    defaultValue={selectedHome.postalCode ?? ""}
+                  />
+                </div>
+                <div className="field">
+                  <label htmlFor="edit-home-country">Country</label>
+                  <input
+                    id="edit-home-country"
+                    name="country"
+                    defaultValue={selectedHome.country ?? ""}
+                  />
+                </div>
+                <div className="field">
+                  <label htmlFor="edit-home-year">Construction year</label>
+                  <input
+                    id="edit-home-year"
+                    name="constructionYear"
+                    type="number"
+                    min="1200"
+                    max={new Date().getFullYear() + 2}
+                    defaultValue={selectedHome.constructionYear ?? ""}
+                  />
+                </div>
+                <div className="field">
+                  <label htmlFor="edit-home-timezone">Timezone</label>
+                  <input
+                    id="edit-home-timezone"
+                    name="timezone"
+                    defaultValue={selectedHome.timezone}
+                  />
+                </div>
                 <div className="inline-actions">
-                  <button className="button button-small" type="submit"><Check size={15} />Save home</button>
-                  {canArchiveHome && <button className="button button-secondary button-small" type="button" onClick={() => void archiveHome()}><Archive size={15} />Archive home</button>}
+                  <button className="button button-small" type="submit">
+                    <Check size={15} />
+                    Save home
+                  </button>
+                  {canArchiveHome && (
+                    <button
+                      className="button button-secondary button-small"
+                      type="button"
+                      onClick={() => void archiveHome()}
+                    >
+                      <Archive size={15} />
+                      Archive home
+                    </button>
+                  )}
                 </div>
               </form>
             ) : (
-              <button className="button button-secondary button-small" type="button" onClick={() => setEditingHomeId(selectedHome.id)}><Pencil size={15} />Edit selected home</button>
-            )
-          )}
+              <button
+                className="button button-secondary button-small"
+                type="button"
+                onClick={() => setEditingHomeId(selectedHome.id)}
+              >
+                <Pencil size={15} />
+                Edit selected home
+              </button>
+            ))}
 
           <form className="auth-form compact-form" onSubmit={addHome}>
-            <div className="dash-card-head"><h2>Add a home</h2><Plus size={17} /></div>
-            <div className="field"><label htmlFor="home-name">Home name</label><input id="home-name" name="name" required placeholder="Lake House" /></div>
-            <div className="field"><label htmlFor="home-type">Type</label><select id="home-type" name="type"><option value="HOUSE">House</option><option value="APARTMENT">Apartment</option><option value="OTHER">Other</option></select></div>
-            <div className="field"><label htmlFor="home-address">Address</label><input id="home-address" name="addressLine" /></div>
-            <div className="field"><label htmlFor="home-city">City</label><input id="home-city" name="city" /></div>
-            <div className="field"><label htmlFor="home-postal">Postal code</label><input id="home-postal" name="postalCode" /></div>
-            <div className="field"><label htmlFor="home-country">Country</label><input id="home-country" name="country" /></div>
-            <div className="field"><label htmlFor="home-year">Construction year</label><input id="home-year" name="constructionYear" type="number" min="1200" max={new Date().getFullYear() + 2} /></div>
-            <button className="button button-small" type="submit"><Plus size={15} />Add home</button>
+            <div className="dash-card-head">
+              <h2>Add a home</h2>
+              <Plus size={17} />
+            </div>
+            <div className="field">
+              <label htmlFor="home-name">Home name</label>
+              <input id="home-name" name="name" required placeholder="Lake House" />
+            </div>
+            <div className="field">
+              <label htmlFor="home-type">Type</label>
+              <select id="home-type" name="type">
+                <option value="HOUSE">House</option>
+                <option value="APARTMENT">Apartment</option>
+                <option value="OTHER">Other</option>
+              </select>
+            </div>
+            <div className="field">
+              <label htmlFor="home-address">Address</label>
+              <input id="home-address" name="addressLine" />
+            </div>
+            <div className="field">
+              <label htmlFor="home-city">City</label>
+              <input id="home-city" name="city" />
+            </div>
+            <div className="field">
+              <label htmlFor="home-postal">Postal code</label>
+              <input id="home-postal" name="postalCode" />
+            </div>
+            <div className="field">
+              <label htmlFor="home-country">Country</label>
+              <input id="home-country" name="country" />
+            </div>
+            <div className="field">
+              <label htmlFor="home-year">Construction year</label>
+              <input
+                id="home-year"
+                name="constructionYear"
+                type="number"
+                min="1200"
+                max={new Date().getFullYear() + 2}
+              />
+            </div>
+            <button className="button button-small" type="submit">
+              <Plus size={15} />
+              Add home
+            </button>
           </form>
         </section>
 
         <section className="dash-card">
-          <div className="dash-card-head"><h2>Rooms</h2><span>{rooms.length}</span></div>
+          <div className="dash-card-head">
+            <h2>Rooms</h2>
+            <span>{rooms.length}</span>
+          </div>
           <div className="animated-list">
             {rooms.map((room) =>
               editingRoomId === room.id ? (
-                <form className="auth-form compact-form" key={room.id} onSubmit={(event) => void saveRoom(event, room.id)}>
-                  <div className="field"><label htmlFor={`room-name-${room.id}`}>Room name</label><input id={`room-name-${room.id}`} name="name" defaultValue={room.name} required /></div>
-                  <div className="field"><label htmlFor={`room-floor-${room.id}`}>Floor</label><input id={`room-floor-${room.id}`} name="floor" defaultValue={room.floor ?? ""} /></div>
-                  <div className="field"><label htmlFor={`room-icon-${room.id}`}>Icon label</label><input id={`room-icon-${room.id}`} name="icon" defaultValue={room.icon ?? "Room"} /></div>
-                  <div className="inline-actions"><button className="button button-small" type="submit"><Check size={15} />Save</button><button className="button button-secondary button-small" type="button" onClick={() => setEditingRoomId("")}><X size={15} />Cancel</button></div>
+                <form
+                  className="auth-form compact-form"
+                  key={room.id}
+                  onSubmit={(event) => void saveRoom(event, room.id)}
+                >
+                  <div className="field">
+                    <label htmlFor={`room-name-${room.id}`}>Room name</label>
+                    <input
+                      id={`room-name-${room.id}`}
+                      name="name"
+                      defaultValue={room.name}
+                      required
+                    />
+                  </div>
+                  <div className="field">
+                    <label htmlFor={`room-floor-${room.id}`}>Floor</label>
+                    <input
+                      id={`room-floor-${room.id}`}
+                      name="floor"
+                      defaultValue={room.floor ?? ""}
+                    />
+                  </div>
+                  <div className="field">
+                    <label htmlFor={`room-icon-${room.id}`}>Icon label</label>
+                    <input
+                      id={`room-icon-${room.id}`}
+                      name="icon"
+                      defaultValue={room.icon ?? "Room"}
+                    />
+                  </div>
+                  <div className="inline-actions">
+                    <button className="button button-small" type="submit">
+                      <Check size={15} />
+                      Save
+                    </button>
+                    <button
+                      className="button button-secondary button-small"
+                      type="button"
+                      onClick={() => setEditingRoomId("")}
+                    >
+                      <X size={15} />
+                      Cancel
+                    </button>
+                  </div>
                 </form>
               ) : (
                 <div className="dash-task has-action" key={room.id}>
-                  <span><House size={16} /></span>
-                  <div><strong>{room.name}</strong><small>{room.floor || "No floor set"}</small></div>
-                  {canManageHome && <div className="inline-actions"><button className="icon-action" type="button" aria-label={`Edit ${room.name}`} onClick={() => setEditingRoomId(room.id)}><Pencil size={15} /></button><button className="icon-action" type="button" aria-label={`Archive ${room.name}`} onClick={() => void archiveRoom(room)}><Archive size={15} /></button></div>}
+                  <span>
+                    <House size={16} />
+                  </span>
+                  <div>
+                    <strong>{room.name}</strong>
+                    <small>{room.floor || "No floor set"}</small>
+                  </div>
+                  {canManageHome && (
+                    <div className="inline-actions">
+                      <button
+                        className="icon-action"
+                        type="button"
+                        aria-label={`Edit ${room.name}`}
+                        onClick={() => setEditingRoomId(room.id)}
+                      >
+                        <Pencil size={15} />
+                      </button>
+                      <button
+                        className="icon-action"
+                        type="button"
+                        aria-label={`Archive ${room.name}`}
+                        onClick={() => void archiveRoom(room)}
+                      >
+                        <Archive size={15} />
+                      </button>
+                    </div>
+                  )}
                 </div>
               ),
             )}
           </div>
-          {!rooms.length && <p className="muted-copy">Choose a home, then add its first room.</p>}
+          {!rooms.length && (
+            <p className="muted-copy">
+              Choose a home, then add its first room.
+            </p>
+          )}
           {canManageHome && (
             <form className="auth-form compact-form" onSubmit={addRoom}>
-              <div className="field"><label htmlFor="room-name">Room name</label><input id="room-name" name="name" required disabled={!homeId} placeholder="Kitchen" /></div>
-              <div className="field"><label htmlFor="room-floor">Floor</label><input id="room-floor" name="floor" disabled={!homeId} placeholder="Ground floor" /></div>
-              <div className="field"><label htmlFor="room-icon">Icon label</label><input id="room-icon" name="icon" disabled={!homeId} placeholder="Kitchen" /></div>
-              <button className="button button-small" disabled={!homeId} type="submit"><Plus size={15} />Add room</button>
+              <div className="field">
+                <label htmlFor="room-name">Room name</label>
+                <input
+                  id="room-name"
+                  name="name"
+                  required
+                  disabled={!homeId}
+                  placeholder="Kitchen"
+                />
+              </div>
+              <div className="field">
+                <label htmlFor="room-floor">Floor</label>
+                <input
+                  id="room-floor"
+                  name="floor"
+                  disabled={!homeId}
+                  placeholder="Ground floor"
+                />
+              </div>
+              <div className="field">
+                <label htmlFor="room-icon">Icon label</label>
+                <input
+                  id="room-icon"
+                  name="icon"
+                  disabled={!homeId}
+                  placeholder="Kitchen"
+                />
+              </div>
+              <button
+                className="button button-small"
+                disabled={!homeId}
+                type="submit"
+              >
+                <Plus size={15} />
+                Add room
+              </button>
             </form>
           )}
         </section>
