@@ -1,12 +1,17 @@
 import "server-only";
 
-import { createHash, randomBytes, timingSafeEqual } from "node:crypto";
 import { and, eq, gt, isNull, or } from "drizzle-orm";
 import { db } from "@/db";
 import { apiKeys, type ApiScope } from "@/db/connected-platform-schema";
 import { homeMembers } from "@/db/schema";
+import {
+  createOpaqueToken,
+  hashToken,
+} from "@/src/features/integrations/security";
 import type { HomeRole } from "@/src/features/members/permissions";
 import { AppError } from "@/src/server/errors";
+
+export { createOpaqueToken, hashToken };
 
 export const apiScopes: readonly ApiScope[] = [
   "home:read",
@@ -17,17 +22,6 @@ export const apiScopes: readonly ApiScope[] = [
   "widgets:read",
   "webhooks:manage",
 ];
-
-export function hashToken(token: string) {
-  return createHash("sha256").update(token).digest("hex");
-}
-
-export function createOpaqueToken(namespace: "api" | "calendar") {
-  const prefix = randomBytes(4).toString("hex");
-  const secret = randomBytes(32).toString("base64url");
-  const token = `homi_${namespace}_${prefix}_${secret}`;
-  return { token, prefix, hash: hashToken(token) };
-}
 
 function tokenFromRequest(request: Request) {
   const header = request.headers.get("authorization");
@@ -99,13 +93,4 @@ export async function requireApiHomeAccess(
       403,
     );
   return member;
-}
-
-export function constantTimeTokenMatch(candidate: string, expectedHash: string) {
-  const candidateHash = Buffer.from(hashToken(candidate), "hex");
-  const expected = Buffer.from(expectedHash, "hex");
-  return (
-    candidateHash.byteLength === expected.byteLength &&
-    timingSafeEqual(candidateHash, expected)
-  );
 }
