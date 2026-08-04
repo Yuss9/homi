@@ -27,7 +27,7 @@ describe("advanced maintenance recurrence", () => {
       1,
       { season: "SUMMER" },
     );
-    expect(summer?.toISOString()).toBe("2026-05-01T00:00:00.000Z");
+    expect(summer?.toISOString()).toBe("2026-06-01T00:00:00.000Z");
   });
 
   test("honors custom day intervals and recurrence end dates", () => {
