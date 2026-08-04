@@ -63,7 +63,7 @@ export function DocumentManager() {
   const [message, setMessage] = useState("");
 
   const selectedHome = homes.find((home) => home.id === homeId);
-  const canEdit = selectedHome?.role !== "VIEWER";
+  const canEdit = Boolean(selectedHome && selectedHome.role !== "VIEWER");
 
   useEffect(() => {
     void fetch("/api/homes")
@@ -92,9 +92,24 @@ export function DocumentManager() {
   }
 
   useEffect(() => {
-    setEditingId("");
-    void load(homeId);
+    if (!homeId) return;
+    void Promise.all([
+      fetch(`/api/assets?homeId=${homeId}`).then((response) => response.json()),
+      fetch(`/api/documents?homeId=${homeId}`).then((response) =>
+        response.json(),
+      ),
+    ]).then(([assetPayload, documentPayload]) => {
+      setAssets(assetPayload.assets ?? []);
+      setDocuments(documentPayload.documents ?? []);
+    });
   }, [homeId]);
+
+  function selectHome(selectedId: string) {
+    setEditingId("");
+    setAssets([]);
+    setDocuments([]);
+    setHomeId(selectedId);
+  }
 
   async function upload(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -158,7 +173,9 @@ export function DocumentManager() {
     });
     const tagsPayload = await tagsResponse.json();
     if (!tagsResponse.ok) {
-      setError(tagsPayload.error?.message ?? "Metadata saved, but tags failed.");
+      setError(
+        tagsPayload.error?.message ?? "Metadata saved, but tags failed.",
+      );
       await load();
       return;
     }
@@ -178,7 +195,9 @@ export function DocumentManager() {
       return;
     }
     setEditingId("");
-    setMessage(`${document.title} was archived. Its private file was preserved.`);
+    setMessage(
+      `${document.title} was archived. Its private file was preserved.`,
+    );
     await load();
   }
 
@@ -190,8 +209,16 @@ export function DocumentManager() {
           <h1>Documents</h1>
           <p>Store document dates, expirations, tags, and linked equipment.</p>
         </div>
-        <select aria-label="Selected home" value={homeId} onChange={(event) => setHomeId(event.target.value)}>
-          {homes.map((home) => <option key={home.id} value={home.id}>{home.name}</option>)}
+        <select
+          aria-label="Selected home"
+          value={homeId}
+          onChange={(event) => selectHome(event.target.value)}
+        >
+          {homes.map((home) => (
+            <option key={home.id} value={home.id}>
+              {home.name}
+            </option>
+          ))}
         </select>
       </div>
 
@@ -199,58 +226,311 @@ export function DocumentManager() {
 
       <div className="dash-grid document-grid" style={{ marginTop: 32 }}>
         {canEdit && (
-          <form className={`dash-card auth-form ${loading ? "is-submitting" : ""}`} onSubmit={upload}>
-            <div className="dash-card-head"><h2>Upload a file</h2><Plus size={19} /></div>
+          <form
+            className={`dash-card auth-form ${loading ? "is-submitting" : ""}`}
+            onSubmit={upload}
+          >
+            <div className="dash-card-head">
+              <h2>Upload a file</h2>
+              <Plus size={19} />
+            </div>
             <input type="hidden" name="homeId" value={homeId} />
-            <div className="field"><label htmlFor="doc-title">Title</label><input id="doc-title" name="title" required disabled={loading} placeholder="Dishwasher invoice" /></div>
-            <div className="field"><label htmlFor="doc-type">Category</label><select id="doc-type" name="type" defaultValue="INVOICE" disabled={loading}><option value="INVOICE">Invoice</option><option value="WARRANTY">Warranty</option><option value="MANUAL">Manual</option><option value="CERTIFICATE">Certificate</option><option value="CONTRACT">Contract</option><option value="PHOTO">Photo</option><option value="OTHER">Other</option></select></div>
-            <div className="field"><label htmlFor="doc-asset">Linked asset</label><select id="doc-asset" name="assetId" disabled={loading}><option value="">Whole home</option>{assets.map((asset) => <option key={asset.id} value={asset.id}>{asset.name}</option>)}</select></div>
-            <div className="field"><label htmlFor="doc-description">Description</label><textarea id="doc-description" name="description" disabled={loading} /></div>
-            <div className="field"><label htmlFor="doc-date">Document date</label><input id="doc-date" name="documentDate" type="date" disabled={loading} /></div>
-            <div className="field"><label htmlFor="doc-expiry">Expiry date</label><input id="doc-expiry" name="expiryDate" type="date" disabled={loading} /></div>
-            <div className="field"><label htmlFor="doc-tags">Tags</label><input id="doc-tags" name="tags" placeholder="Kitchen, Warranty, 2026" disabled={loading} maxLength={500} /></div>
+            <div className="field">
+              <label htmlFor="doc-title">Title</label>
+              <input
+                id="doc-title"
+                name="title"
+                required
+                disabled={loading}
+                placeholder="Dishwasher invoice"
+              />
+            </div>
+            <div className="field">
+              <label htmlFor="doc-type">Category</label>
+              <select
+                id="doc-type"
+                name="type"
+                defaultValue="INVOICE"
+                disabled={loading}
+              >
+                <option value="INVOICE">Invoice</option>
+                <option value="WARRANTY">Warranty</option>
+                <option value="MANUAL">Manual</option>
+                <option value="CERTIFICATE">Certificate</option>
+                <option value="CONTRACT">Contract</option>
+                <option value="PHOTO">Photo</option>
+                <option value="OTHER">Other</option>
+              </select>
+            </div>
+            <div className="field">
+              <label htmlFor="doc-asset">Linked asset</label>
+              <select id="doc-asset" name="assetId" disabled={loading}>
+                <option value="">Whole home</option>
+                {assets.map((asset) => (
+                  <option key={asset.id} value={asset.id}>
+                    {asset.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="field">
+              <label htmlFor="doc-description">Description</label>
+              <textarea
+                id="doc-description"
+                name="description"
+                disabled={loading}
+              />
+            </div>
+            <div className="field">
+              <label htmlFor="doc-date">Document date</label>
+              <input
+                id="doc-date"
+                name="documentDate"
+                type="date"
+                disabled={loading}
+              />
+            </div>
+            <div className="field">
+              <label htmlFor="doc-expiry">Expiry date</label>
+              <input
+                id="doc-expiry"
+                name="expiryDate"
+                type="date"
+                disabled={loading}
+              />
+            </div>
+            <div className="field">
+              <label htmlFor="doc-tags">Tags</label>
+              <input
+                id="doc-tags"
+                name="tags"
+                placeholder="Kitchen, Warranty, 2026"
+                disabled={loading}
+                maxLength={500}
+              />
+            </div>
             <div className="field">
               <label htmlFor="doc-file">File · any format up to 10 MB</label>
-              <label className="upload-dropzone" htmlFor="doc-file"><FileText size={22} /><span><strong>{selectedFile || "Choose a file from your device"}</strong><small>Files remain private and require home access.</small></span><b>{selectedFile ? "Change" : "Browse"}</b></label>
-              <input className="file-input" id="doc-file" name="file" type="file" required disabled={loading} onChange={(event) => setSelectedFile(event.target.files?.[0]?.name ?? "")} />
+              <label className="upload-dropzone" htmlFor="doc-file">
+                <FileText size={22} />
+                <span>
+                  <strong>
+                    {selectedFile || "Choose a file from your device"}
+                  </strong>
+                  <small>Files remain private and require home access.</small>
+                </span>
+                <b>{selectedFile ? "Change" : "Browse"}</b>
+              </label>
+              <input
+                className="file-input"
+                id="doc-file"
+                name="file"
+                type="file"
+                required
+                disabled={loading}
+                onChange={(event) =>
+                  setSelectedFile(event.target.files?.[0]?.name ?? "")
+                }
+              />
             </div>
-            <button className="button button-large" disabled={loading || !homeId} type="submit">{loading ? <LoaderCircle className="button-spinner" size={18} /> : <Plus size={18} />}{loading ? "Uploading securely…" : "Upload securely"}</button>
+            <button
+              className="button button-large"
+              disabled={loading || !homeId}
+              type="submit"
+            >
+              {loading ? (
+                <LoaderCircle className="button-spinner" size={18} />
+              ) : (
+                <Plus size={18} />
+              )}
+              {loading ? "Uploading securely…" : "Upload securely"}
+            </button>
           </form>
         )}
 
         <section className="dash-card document-library">
-          <div className="dash-card-head"><h2>Private vault</h2><span>{documents.length}</span></div>
+          <div className="dash-card-head">
+            <h2>Private vault</h2>
+            <span>{documents.length}</span>
+          </div>
           <div className="animated-list">
             {documents.map((document) =>
               editingId === document.id ? (
-                <form className="auth-form compact-form" key={document.id} onSubmit={(event) => void saveDocument(event, document)}>
-                  <div className="dash-card-head"><h2>Edit document</h2><button className="icon-action" type="button" aria-label="Cancel document editing" onClick={() => setEditingId("")}><X size={16} /></button></div>
-                  <div className="field"><label htmlFor={`document-title-${document.id}`}>Title</label><input id={`document-title-${document.id}`} name="title" defaultValue={document.title} required /></div>
-                  <div className="field"><label htmlFor={`document-type-${document.id}`}>Category</label><select id={`document-type-${document.id}`} name="type" defaultValue={document.type}><option value="INVOICE">Invoice</option><option value="WARRANTY">Warranty</option><option value="MANUAL">Manual</option><option value="CERTIFICATE">Certificate</option><option value="CONTRACT">Contract</option><option value="PHOTO">Photo</option><option value="OTHER">Other</option></select></div>
-                  <div className="field"><label htmlFor={`document-asset-${document.id}`}>Linked asset</label><select id={`document-asset-${document.id}`} name="assetId" defaultValue={document.assetId ?? ""}><option value="">Whole home</option>{assets.map((asset) => <option key={asset.id} value={asset.id}>{asset.name}</option>)}</select></div>
-                  <div className="field"><label htmlFor={`document-description-${document.id}`}>Description</label><textarea id={`document-description-${document.id}`} name="description" defaultValue={document.description ?? ""} /></div>
-                  <div className="field"><label htmlFor={`document-date-${document.id}`}>Document date</label><input id={`document-date-${document.id}`} name="documentDate" type="date" defaultValue={document.documentDate ?? ""} /></div>
-                  <div className="field"><label htmlFor={`document-expiry-${document.id}`}>Expiry date</label><input id={`document-expiry-${document.id}`} name="expiryDate" type="date" defaultValue={document.expiryDate ?? ""} /></div>
-                  <div className="field"><label htmlFor={`document-tags-${document.id}`}>Tags</label><input id={`document-tags-${document.id}`} name="tags" defaultValue={document.tags.map((tag) => tag.name).join(", ")} /></div>
-                  <div className="inline-actions"><button className="button button-small" type="submit"><Check size={15} />Save</button><button className="button button-secondary button-small" type="button" onClick={() => void archiveDocument(document)}><Archive size={15} />Archive</button></div>
+                <form
+                  className="auth-form compact-form"
+                  key={document.id}
+                  onSubmit={(event) => void saveDocument(event, document)}
+                >
+                  <div className="dash-card-head">
+                    <h2>Edit document</h2>
+                    <button
+                      className="icon-action"
+                      type="button"
+                      aria-label="Cancel document editing"
+                      onClick={() => setEditingId("")}
+                    >
+                      <X size={16} />
+                    </button>
+                  </div>
+                  <div className="field">
+                    <label htmlFor={`document-title-${document.id}`}>
+                      Title
+                    </label>
+                    <input
+                      id={`document-title-${document.id}`}
+                      name="title"
+                      defaultValue={document.title}
+                      required
+                    />
+                  </div>
+                  <div className="field">
+                    <label htmlFor={`document-type-${document.id}`}>
+                      Category
+                    </label>
+                    <select
+                      id={`document-type-${document.id}`}
+                      name="type"
+                      defaultValue={document.type}
+                    >
+                      <option value="INVOICE">Invoice</option>
+                      <option value="WARRANTY">Warranty</option>
+                      <option value="MANUAL">Manual</option>
+                      <option value="CERTIFICATE">Certificate</option>
+                      <option value="CONTRACT">Contract</option>
+                      <option value="PHOTO">Photo</option>
+                      <option value="OTHER">Other</option>
+                    </select>
+                  </div>
+                  <div className="field">
+                    <label htmlFor={`document-asset-${document.id}`}>
+                      Linked asset
+                    </label>
+                    <select
+                      id={`document-asset-${document.id}`}
+                      name="assetId"
+                      defaultValue={document.assetId ?? ""}
+                    >
+                      <option value="">Whole home</option>
+                      {assets.map((asset) => (
+                        <option key={asset.id} value={asset.id}>
+                          {asset.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="field">
+                    <label htmlFor={`document-description-${document.id}`}>
+                      Description
+                    </label>
+                    <textarea
+                      id={`document-description-${document.id}`}
+                      name="description"
+                      defaultValue={document.description ?? ""}
+                    />
+                  </div>
+                  <div className="field">
+                    <label htmlFor={`document-date-${document.id}`}>
+                      Document date
+                    </label>
+                    <input
+                      id={`document-date-${document.id}`}
+                      name="documentDate"
+                      type="date"
+                      defaultValue={document.documentDate ?? ""}
+                    />
+                  </div>
+                  <div className="field">
+                    <label htmlFor={`document-expiry-${document.id}`}>
+                      Expiry date
+                    </label>
+                    <input
+                      id={`document-expiry-${document.id}`}
+                      name="expiryDate"
+                      type="date"
+                      defaultValue={document.expiryDate ?? ""}
+                    />
+                  </div>
+                  <div className="field">
+                    <label htmlFor={`document-tags-${document.id}`}>Tags</label>
+                    <input
+                      id={`document-tags-${document.id}`}
+                      name="tags"
+                      defaultValue={document.tags
+                        .map((tag) => tag.name)
+                        .join(", ")}
+                    />
+                  </div>
+                  <div className="inline-actions">
+                    <button className="button button-small" type="submit">
+                      <Check size={15} />
+                      Save
+                    </button>
+                    <button
+                      className="button button-secondary button-small"
+                      type="button"
+                      onClick={() => void archiveDocument(document)}
+                    >
+                      <Archive size={15} />
+                      Archive
+                    </button>
+                  </div>
                 </form>
               ) : (
-                <article className="dash-task document-row has-action" key={document.id}>
-                  <span><FileText size={17} /></span>
+                <article
+                  className="dash-task document-row has-action"
+                  key={document.id}
+                >
+                  <span>
+                    <FileText size={17} />
+                  </span>
                   <div>
                     <strong>{document.title}</strong>
-                    <small>{document.type.toLowerCase()} · {formatSize(document.size)} · {document.documentDate || "No document date"}</small>
+                    <small>
+                      {document.type.toLowerCase()} · {formatSize(document.size)} ·{" "}
+                      {document.documentDate || "No document date"}
+                    </small>
                     <small>{expiryLabel(document.expiryDate)}</small>
-                    {document.tags.length > 0 && <span className="document-tags">{document.tags.map((tag) => <i key={tag.id}>{tag.name}</i>)}</span>}
+                    {document.tags.length > 0 && (
+                      <span className="document-tags">
+                        {document.tags.map((tag) => (
+                          <i key={tag.id}>{tag.name}</i>
+                        ))}
+                      </span>
+                    )}
                   </div>
-                  <a className="icon-action" href={`/api/files/${document.fileId}?preview=1`} target="_blank" rel="noreferrer" aria-label={`Preview ${document.title}`}><Eye size={16} /></a>
-                  <a className="icon-action" href={`/api/files/${document.fileId}`} aria-label={`Download ${document.title}`}><Download size={16} /></a>
-                  {canEdit && <button className="icon-action" type="button" aria-label={`Edit ${document.title}`} onClick={() => setEditingId(document.id)}><Pencil size={16} /></button>}
+                  <a
+                    className="icon-action"
+                    href={`/api/files/${document.fileId}?preview=1`}
+                    target="_blank"
+                    rel="noreferrer"
+                    aria-label={`Preview ${document.title}`}
+                  >
+                    <Eye size={16} />
+                  </a>
+                  <a
+                    className="icon-action"
+                    href={`/api/files/${document.fileId}`}
+                    aria-label={`Download ${document.title}`}
+                  >
+                    <Download size={16} />
+                  </a>
+                  {canEdit && (
+                    <button
+                      className="icon-action"
+                      type="button"
+                      aria-label={`Edit ${document.title}`}
+                      onClick={() => setEditingId(document.id)}
+                    >
+                      <Pencil size={16} />
+                    </button>
+                  )}
                 </article>
               ),
             )}
           </div>
-          {!documents.length && <p className="muted-copy">No files stored for this home yet.</p>}
+          {!documents.length && (
+            <p className="muted-copy">No files stored for this home yet.</p>
+          )}
         </section>
       </div>
     </main>
