@@ -1,0 +1,122 @@
+create_maintenance:
+  name: Create maintenance
+  description: Create a maintenance task in the configured Homi home.
+  fields:
+    entry_id:
+      name: Homi entry
+      selector:
+        config_entry:
+          integration: homi
+    title:
+      name: Title
+      required: true
+      selector:
+        text:
+    asset_id:
+      name: Asset ID
+      selector:
+        text:
+    description:
+      name: Description
+      selector:
+        text:
+          multiline: true
+    next_due_at:
+      name: Next due date
+      selector:
+        datetime:
+    priority:
+      name: Priority
+      selector:
+        select:
+          options: [LOW, MEDIUM, HIGH, CRITICAL]
+    frequency_type:
+      name: Frequency
+      selector:
+        select:
+          options: [ONCE, DAILY, WEEKLY, MONTHLY, YEARLY, CUSTOM]
+    frequency_interval:
+      name: Frequency interval
+      selector:
+        number:
+          min: 1
+          max: 3650
+
+complete_maintenance:
+  name: Complete maintenance
+  description: Complete an existing Homi maintenance task.
+  fields:
+    entry_id:
+      name: Homi entry
+      selector:
+        config_entry:
+          integration: homi
+    task_id:
+      name: Task ID
+      required: true
+      selector:
+        text:
+    notes:
+      name: Notes
+      selector:
+        text:
+          multiline: true
+    cost:
+      name: Cost
+      selector:
+        number:
+          min: 0
+          mode: box
+    currency:
+      name: Currency
+      default: EUR
+      selector:
+        text:
+    service_provider:
+      name: Service provider
+      selector:
+        text:
+
+declare_repair:
+  name: Declare repair
+  description: Record a repair issue for a Homi asset.
+  fields:
+    entry_id:
+      name: Homi entry
+      selector:
+        config_entry:
+          integration: homi
+    asset_id:
+      name: Asset ID
+      required: true
+      selector:
+        text:
+    title:
+      name: Title
+      required: true
+      selector:
+        text:
+    description:
+      name: Description
+      selector:
+        text:
+          multiline: true
+    issue_date:
+      name: Issue date
+      selector:
+        date:
+
+open_asset:
+  name: Open asset
+  description: Resolve an asset URL and fire a homi_open_asset event.
+  fields:
+    entry_id:
+      name: Homi entry
+      selector:
+        config_entry:
+          integration: homi
+    asset_id:
+      name: Asset ID
+      required: true
+      selector:
+        text:
