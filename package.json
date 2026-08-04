@@ -77,7 +77,7 @@
     "typescript": "5.9.3",
     "vinext": "0.2.1",
     "vite": "8.0.13",
-    "vitest": "^3.2.4",
+    "vitest": "^4.1.10",
     "wrangler": "4.92.0"
   },
   "overrides": {
