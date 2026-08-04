@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import date
+from datetime import date, datetime
 from typing import Any
 
 import voluptuous as vol
@@ -27,15 +27,32 @@ from .const import (
 from .coordinator import HomiDataCoordinator
 
 SERVICE_ENTRY = vol.Optional("entry_id")
+SERVICES = (
+    SERVICE_CREATE_MAINTENANCE,
+    SERVICE_COMPLETE_MAINTENANCE,
+    SERVICE_DECLARE_REPAIR,
+    SERVICE_OPEN_ASSET,
+)
 
 
 def _client_for_call(hass: HomeAssistant, call: ServiceCall) -> HomiApiClient:
     entries = list(hass.config_entries.async_entries(DOMAIN))
     requested = call.data.get("entry_id")
-    entry = next((item for item in entries if item.entry_id == requested), None) if requested else entries[0] if len(entries) == 1 else None
+    if requested:
+        entry = next((item for item in entries if item.entry_id == requested), None)
+    else:
+        entry = entries[0] if len(entries) == 1 else None
     if entry is None:
-        raise HomeAssistantError("Choose a Homi config entry when more than one home is configured.")
+        raise HomeAssistantError(
+            "Choose a Homi config entry when more than one home is configured."
+        )
     return hass.data[DOMAIN][entry.entry_id]["client"]
+
+
+def _iso_value(value: date | datetime | str | None) -> str | None:
+    if value is None:
+        return None
+    return value.isoformat() if isinstance(value, (date, datetime)) else value
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -66,13 +83,15 @@ async def _register_services(hass: HomeAssistant) -> None:
             "assetId": call.data.get("asset_id"),
             "title": call.data["title"],
             "description": call.data.get("description"),
-            "nextDueAt": call.data.get("next_due_at"),
+            "nextDueAt": _iso_value(call.data.get("next_due_at")),
             "priority": call.data.get("priority", "MEDIUM"),
             "frequencyType": call.data.get("frequency_type", "ONCE"),
             "frequencyInterval": call.data.get("frequency_interval", 1),
         }
         try:
-            return await client.create_maintenance({key: value for key, value in payload.items() if value is not None})
+            return await client.create_maintenance(
+                {key: value for key, value in payload.items() if value is not None}
+            )
         except HomiApiError as error:
             raise HomeAssistantError(str(error)) from error
 
@@ -80,7 +99,9 @@ async def _register_services(hass: HomeAssistant) -> None:
         client = _client_for_call(hass, call)
         payload = {
             "notes": call.data.get("notes"),
-            "cost": str(call.data["cost"]) if call.data.get("cost") is not None else None,
+            "cost": (
+                str(call.data["cost"]) if call.data.get("cost") is not None else None
+            ),
             "currency": call.data.get("currency", "EUR"),
             "serviceProvider": call.data.get("service_provider"),
         }
@@ -98,11 +119,14 @@ async def _register_services(hass: HomeAssistant) -> None:
             "assetId": call.data["asset_id"],
             "title": call.data["title"],
             "description": call.data.get("description"),
-            "issueDate": call.data.get("issue_date", date.today().isoformat()),
-            "priority": call.data.get("priority"),
+            "issueDate": _iso_value(
+                call.data.get("issue_date", date.today().isoformat())
+            ),
         }
         try:
-            return await client.declare_repair({key: value for key, value in payload.items() if value is not None})
+            return await client.declare_repair(
+                {key: value for key, value in payload.items() if value is not None}
+            )
         except HomiApiError as error:
             raise HomeAssistantError(str(error)) from error
 
@@ -111,7 +135,9 @@ async def _register_services(hass: HomeAssistant) -> None:
         try:
             payload = await client.asset(call.data["asset_id"])
             url = f"{client.base_url.rstrip('/')}{payload['asset']['url']}"
-            hass.bus.async_fire("homi_open_asset", {"url": url, "asset": payload["asset"]})
+            hass.bus.async_fire(
+                "homi_open_asset", {"url": url, "asset": payload["asset"]}
+            )
             return {"url": url, "asset": payload["asset"]}
         except HomiApiError as error:
             raise HomeAssistantError(str(error)) from error
@@ -127,9 +153,15 @@ async def _register_services(hass: HomeAssistant) -> None:
                 vol.Optional("asset_id"): cv.string,
                 vol.Optional("description"): cv.string,
                 vol.Optional("next_due_at"): cv.datetime,
-                vol.Optional("priority"): vol.In(["LOW", "MEDIUM", "HIGH", "CRITICAL"]),
-                vol.Optional("frequency_type"): vol.In(["ONCE", "DAILY", "WEEKLY", "MONTHLY", "YEARLY", "CUSTOM"]),
-                vol.Optional("frequency_interval"): vol.All(vol.Coerce(int), vol.Range(min=1, max=3650)),
+                vol.Optional("priority"): vol.In(
+                    ["LOW", "MEDIUM", "HIGH", "CRITICAL"]
+                ),
+                vol.Optional("frequency_type"): vol.In(
+                    ["ONCE", "DAILY", "WEEKLY", "MONTHLY", "YEARLY", "CUSTOM"]
+                ),
+                vol.Optional("frequency_interval"): vol.All(
+                    vol.Coerce(int), vol.Range(min=1, max=3650)
+                ),
             }
         ),
         supports_response=SupportsResponse.OPTIONAL,
@@ -169,14 +201,19 @@ async def _register_services(hass: HomeAssistant) -> None:
         DOMAIN,
         SERVICE_OPEN_ASSET,
         open_asset,
-        schema=vol.Schema({SERVICE_ENTRY: cv.string, vol.Required("asset_id"): cv.string}),
+        schema=vol.Schema(
+            {SERVICE_ENTRY: cv.string, vol.Required("asset_id"): cv.string}
+        ),
         supports_response=SupportsResponse.ONLY,
     )
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Unload Homi entities."""
+    """Unload Homi entities and remove shared services when the last entry leaves."""
     unloaded = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unloaded:
         hass.data[DOMAIN].pop(entry.entry_id, None)
+        if not hass.data[DOMAIN]:
+            for service in SERVICES:
+                hass.services.async_remove(DOMAIN, service)
     return unloaded
