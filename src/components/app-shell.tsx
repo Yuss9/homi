@@ -4,18 +4,21 @@ import { usePathname } from "next/navigation";
 import {
   Bell,
   CalendarDays,
+  CircleAlert,
   FileText,
   House,
   LayoutDashboard,
   Package,
   Settings,
   ShieldCheck,
+  TriangleAlert,
   Users,
   Wrench,
 } from "lucide-react";
 import { Brand } from "@/src/components/brand";
-import { authClient } from "@/src/lib/auth-client";
+import type { HomeHealth } from "@/src/features/dashboard/health";
 import type { SelectableHome } from "@/src/features/homes/selection";
+import { authClient } from "@/src/lib/auth-client";
 import type { ReactNode } from "react";
 
 const navigation = [
@@ -90,7 +93,9 @@ export function AppShell({
           </span>
           <span>
             <strong>{selectedHome?.name ?? "No home yet"}</strong>
-            <small>{selectedHome?.city || selectedHome?.type || "Personal journal"}</small>
+            <small>
+              {selectedHome?.city || selectedHome?.type || "Personal journal"}
+            </small>
           </span>
           <select
             aria-label="Global selected home"
@@ -169,17 +174,26 @@ export function AppShell({
   );
 }
 
-export function CalmStatus() {
+export function CalmStatus({ health }: { health: HomeHealth }) {
+  const Icon =
+    health.level === "GOOD"
+      ? ShieldCheck
+      : health.level === "CRITICAL"
+        ? CircleAlert
+        : TriangleAlert;
+
   return (
-    <div className="dash-status">
+    <div className="dash-status" data-health={health.level.toLowerCase()}>
       <span className="status-orb">
-        <ShieldCheck size={25} />
+        <Icon size={25} />
       </span>
       <div>
-        <h2>Everything looks good</h2>
-        <p>Your home has no critical issues. One task is coming up tomorrow.</p>
+        <h2>{health.title}</h2>
+        <p>{health.summary}</p>
       </div>
-      <span>Home health · Good</span>
+      <span>
+        Home health · {health.label} · {health.score}/100
+      </span>
     </div>
   );
 }

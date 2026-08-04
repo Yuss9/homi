@@ -11,7 +11,11 @@ test("seeded member can sign in, use private files, and remains tenant-isolated"
   await page.getByRole("button", { name: /^Sign in/ }).click();
 
   await expect(page).toHaveURL(/\/dashboard$/);
-  await expect(page.getByRole("heading", { name: /Good morning, Alex/ })).toBeVisible();
+  await expect(
+    page.getByRole("heading", {
+      name: /Good (morning|afternoon|evening), Alex/,
+    }),
+  ).toBeVisible();
   await expect(page.getByText("Cedar House is ready for the day.")).toBeVisible();
 
   await page.goto("/");
@@ -24,7 +28,9 @@ test("seeded member can sign in, use private files, and remains tenant-isolated"
   await expect(
     marketingHeader.getByRole("link", { name: "Open dashboard" }),
   ).toBeVisible();
-  await expect(marketingHeader.getByRole("link", { name: "Sign in" })).toHaveCount(0);
+  await expect(
+    marketingHeader.getByRole("link", { name: "Sign in" }),
+  ).toHaveCount(0);
   await expect(
     marketingHeader.getByRole("link", { name: "Create account" }),
   ).toHaveCount(0);
@@ -34,9 +40,13 @@ test("seeded member can sign in, use private files, and remains tenant-isolated"
 
   const homesResponse = await page.request.get("/api/homes");
   expect(homesResponse.status()).toBe(200);
-  const homesPayload = (await homesResponse.json()) as { homes: Array<{ id: string; name: string }> };
+  const homesPayload = (await homesResponse.json()) as {
+    homes: Array<{ id: string; name: string }>;
+  };
   expect(homesPayload.homes.length).toBeGreaterThan(0);
-  const seededHomeId = homesPayload.homes.find((home) => home.name === "Cedar House")?.id ?? homesPayload.homes[0]!.id;
+  const seededHomeId =
+    homesPayload.homes.find((home) => home.name === "Cedar House")?.id ??
+    homesPayload.homes[0]!.id;
 
   const inaccessibleResponse = await page.request.get(
     `/api/assets?homeId=${crypto.randomUUID()}`,
@@ -45,16 +55,22 @@ test("seeded member can sign in, use private files, and remains tenant-isolated"
 
   const suffix = crypto.randomUUID().slice(0, 8);
   const homeResponse = await page.request.post("/api/homes", {
-    data: { name: `E2E Home ${suffix}`, type: "HOUSE", timezone: "Europe/Paris" },
+    data: {
+      name: `E2E Home ${suffix}`,
+      type: "HOUSE",
+      timezone: "Europe/Paris",
+    },
   });
   expect(homeResponse.status()).toBe(201);
-  const homeId = ((await homeResponse.json()) as { home: { id: string } }).home.id;
+  const homeId = ((await homeResponse.json()) as { home: { id: string } }).home
+    .id;
 
   const roomResponse = await page.request.post("/api/rooms", {
     data: { homeId, name: `Utility ${suffix}`, floor: "Ground floor" },
   });
   expect(roomResponse.status()).toBe(201);
-  const roomId = ((await roomResponse.json()) as { room: { id: string } }).room.id;
+  const roomId = ((await roomResponse.json()) as { room: { id: string } }).room
+    .id;
 
   const assetResponse = await page.request.post("/api/assets", {
     data: {
@@ -67,7 +83,8 @@ test("seeded member can sign in, use private files, and remains tenant-isolated"
     },
   });
   expect(assetResponse.status()).toBe(201);
-  const assetId = ((await assetResponse.json()) as { asset: { id: string } }).asset.id;
+  const assetId = ((await assetResponse.json()) as { asset: { id: string } })
+    .asset.id;
 
   const taskResponse = await page.request.post("/api/tasks", {
     data: {
@@ -81,13 +98,16 @@ test("seeded member can sign in, use private files, and remains tenant-isolated"
     },
   });
   expect(taskResponse.status()).toBe(201);
-  const taskId = ((await taskResponse.json()) as { task: { id: string } }).task.id;
+  const taskId = ((await taskResponse.json()) as { task: { id: string } }).task
+    .id;
   const idempotencyKey = crypto.randomUUID();
   const completion = await page.request.post(`/api/tasks/${taskId}/complete`, {
     data: { idempotencyKey, notes: "Pressure is steady." },
   });
   expect(completion.status()).toBe(200);
-  expect(((await completion.json()) as { replayed: boolean }).replayed).toBe(false);
+  expect(((await completion.json()) as { replayed: boolean }).replayed).toBe(
+    false,
+  );
   const replay = await page.request.post(`/api/tasks/${taskId}/complete`, {
     data: { idempotencyKey, notes: "Pressure is steady." },
   });
@@ -102,19 +122,29 @@ test("seeded member can sign in, use private files, and remains tenant-isolated"
       file: {
         name: "private-manual.pdf",
         mimeType: "application/pdf",
-        buffer: Buffer.from("%PDF-1.4\n1 0 obj<</Type/Catalog>>endobj\n%%EOF"),
+        buffer: Buffer.from(
+          "%PDF-1.4\n1 0 obj<</Type/Catalog>>endobj\n%%EOF",
+        ),
       },
     },
   });
   expect(uploadResponse.status()).toBe(201);
-  const uploadPayload = (await uploadResponse.json()) as { stored: { id: string } };
+  const uploadPayload = (await uploadResponse.json()) as {
+    stored: { id: string };
+  };
 
-  const privateDownload = await page.request.get(`/api/files/${uploadPayload.stored.id}`);
+  const privateDownload = await page.request.get(
+    `/api/files/${uploadPayload.stored.id}`,
+  );
   expect(privateDownload.status()).toBe(200);
   expect(privateDownload.headers()["cache-control"]).toContain("no-store");
-  expect(privateDownload.headers()["content-disposition"]).toContain("private-manual.pdf");
+  expect(privateDownload.headers()["content-disposition"]).toContain(
+    "private-manual.pdf",
+  );
 
-  const anonymousDownload = await request.get(`/api/files/${uploadPayload.stored.id}`);
+  const anonymousDownload = await request.get(
+    `/api/files/${uploadPayload.stored.id}`,
+  );
   expect(anonymousDownload.status()).toBe(401);
 
   const invitation = await page.request.post("/api/invitations", {
@@ -128,9 +158,14 @@ test("seeded member can sign in, use private files, and remains tenant-isolated"
 
   const notices = await page.request.get("/api/notifications");
   expect(notices.status()).toBe(200);
-  expect(((await notices.json()) as { notifications: unknown[] }).notifications.length).toBeGreaterThan(0);
+  expect(
+    ((await notices.json()) as { notifications: unknown[] }).notifications
+      .length,
+  ).toBeGreaterThan(0);
 
-  const seededAssets = await page.request.get(`/api/assets?homeId=${seededHomeId}`);
+  const seededAssets = await page.request.get(
+    `/api/assets?homeId=${seededHomeId}`,
+  );
   expect(seededAssets.status()).toBe(200);
 
   await page.goto("/maintenance/history");
