@@ -1,6 +1,9 @@
 import { db } from "@/db";
 import { documents, storedFiles } from "@/db/schema";
-import { requireHomeRole } from "@/src/server/authorization";
+import {
+  requireAssetInHome,
+  requireHomeRole,
+} from "@/src/server/authorization";
 import { getEnv } from "@/src/server/env";
 import { errorResponse, requestId } from "@/src/server/http";
 import { enforceRateLimit } from "@/src/server/rate-limit";
@@ -45,6 +48,8 @@ export async function POST(request: Request) {
       "ADMIN",
       "MEMBER",
     ]);
+    if (metadata.assetId)
+      await requireAssetInHome(metadata.assetId, metadata.homeId);
     await enforceRateLimit("upload", session.user.id, {
       limit: 20,
       windowSeconds: 60,
