@@ -3,6 +3,13 @@
 Notable changes to Homi are recorded here. This file is maintained by Release
 Please from Conventional Commit pull request titles.
 
+## [1.3.0](https://github.com/Yuss9/homi/compare/v1.2.0...v1.3.0) (2026-08-04)
+
+
+### Features
+
+* complete resource lifecycle and proactive reminders ([#18](https://github.com/Yuss9/homi/issues/18)) ([b27b70f](https://github.com/Yuss9/homi/commit/b27b70fff685bdaf1bff14cef9bd27188d4a2d8f))
+
 ## [1.2.0](https://github.com/Yuss9/homi/compare/v1.1.1...v1.2.0) (2026-08-04)
 
 
