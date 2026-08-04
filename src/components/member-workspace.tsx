@@ -2,8 +2,12 @@
 
 import { useCallback, useEffect, useState, type FormEvent } from "react";
 import {
+  Copy,
+  Crown,
+  Info,
   LoaderCircle,
   MailPlus,
+  RefreshCcw,
   ShieldCheck,
   UserMinus,
   X,
@@ -46,6 +50,7 @@ export function MemberWorkspace() {
   const [homeId, setHomeId] = useState("");
   const [members, setMembers] = useState<Member[]>([]);
   const [invitations, setInvitations] = useState<Invitation[]>([]);
+  const [inviteLinks, setInviteLinks] = useState<Record<string, string>>({});
   const [currentUserId, setCurrentUserId] = useState("");
   const [currentRole, setCurrentRole] = useState<HomeRole>("VIEWER");
   const [submitting, setSubmitting] = useState(false);
@@ -191,6 +196,66 @@ export function MemberWorkspace() {
     }
   }
 
+  async function transferOwnership(member: Member) {
+    if (
+      !window.confirm(
+        `Transfer ownership of ${selectedHome?.name} to ${member.name}? You will remain an administrator.`,
+      )
+    )
+      return;
+    setProcessingId(member.id);
+    setError("");
+    setMessage("");
+    try {
+      const response = await fetch(`/api/homes/${homeId}/owner`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ memberId: member.id }),
+      });
+      const payload = await response.json();
+      if (!response.ok) {
+        setError(payload.error?.message ?? "Could not transfer ownership.");
+        return;
+      }
+      setMessage(`${member.name} is now the owner. You remain an administrator.`);
+      await loadHousehold(homeId);
+    } finally {
+      setProcessingId("");
+    }
+  }
+
+  async function resendInvitation(invitation: Invitation) {
+    setProcessingId(invitation.id);
+    setError("");
+    setMessage("");
+    try {
+      const response = await fetch(
+        `/api/invitations/${invitation.id}/resend`,
+        { method: "POST" },
+      );
+      const payload = await response.json();
+      if (!response.ok) {
+        setError(payload.error?.message ?? "Could not resend the invitation.");
+        return;
+      }
+      setInviteLinks((current) => ({
+        ...current,
+        [invitation.id]: payload.inviteUrl,
+      }));
+      setMessage(`A fresh invitation was sent to ${invitation.email}.`);
+      await loadHousehold(homeId);
+    } finally {
+      setProcessingId("");
+    }
+  }
+
+  async function copyInvitation(invitation: Invitation) {
+    const inviteUrl = inviteLinks[invitation.id];
+    if (!inviteUrl) return;
+    await navigator.clipboard.writeText(inviteUrl);
+    setMessage(`The fresh invitation link for ${invitation.email} was copied.`);
+  }
+
   async function revokeInvitation(invitation: Invitation) {
     setProcessingId(invitation.id);
     setError("");
@@ -205,6 +270,11 @@ export function MemberWorkspace() {
         return;
       }
       setMessage(`Invitation for ${invitation.email} was revoked.`);
+      setInviteLinks((current) => {
+        const next = { ...current };
+        delete next[invitation.id];
+        return next;
+      });
       await loadHousehold(homeId);
     } finally {
       setProcessingId("");
@@ -223,7 +293,10 @@ export function MemberWorkspace() {
         <div>
           <small>Household access</small>
           <h1>Household</h1>
-          <p>Invite several people, assign clear roles, and manage access safely.</p>
+          <p>
+            Invite several people, recover pending access, assign clear roles,
+            and transfer ownership safely.
+          </p>
         </div>
         <select
           aria-label="Selected home"
@@ -232,6 +305,7 @@ export function MemberWorkspace() {
             setHomeId(event.target.value);
             setMessage("");
             setError("");
+            setInviteLinks({});
           }}
         >
           {homes.map((home) => (
@@ -262,7 +336,11 @@ export function MemberWorkspace() {
                       {member.name}
                       {member.userId === currentUserId ? " · You" : ""}
                     </strong>
-                    <small>{member.email}</small>
+                    <small>
+                      {member.email} · joined {new Intl.DateTimeFormat("en", {
+                        dateStyle: "medium",
+                      }).format(new Date(member.joinedAt))}
+                    </small>
                   </div>
                   {editable ? (
                     <div className="member-actions">
@@ -280,6 +358,18 @@ export function MemberWorkspace() {
                           <option value="ADMIN">Admin</option>
                         )}
                       </select>
+                      {currentRole === "OWNER" && (
+                        <button
+                          className="icon-action"
+                          type="button"
+                          aria-label={`Transfer ownership to ${member.name}`}
+                          title="Transfer ownership"
+                          disabled={processing}
+                          onClick={() => void transferOwnership(member)}
+                        >
+                          <Crown size={16} />
+                        </button>
+                      )}
                       <button
                         className="icon-action"
                         type="button"
@@ -326,7 +416,8 @@ export function MemberWorkspace() {
                 placeholder={"sarah@example.com\nalex@example.com"}
               />
               <small className="field-hint">
-                Add up to 20 addresses, separated by spaces, commas, or new lines.
+                Add up to 20 addresses, separated by spaces, commas, or new
+                lines.
               </small>
             </div>
             <div className="field">
@@ -339,7 +430,11 @@ export function MemberWorkspace() {
                 )}
               </select>
             </div>
-            <button className="button" disabled={!homeId || submitting} type="submit">
+            <button
+              className="button"
+              disabled={!homeId || submitting}
+              type="submit"
+            >
               {submitting ? (
                 <LoaderCircle className="button-spinner" size={16} />
               ) : (
@@ -361,22 +456,46 @@ export function MemberWorkspace() {
                 <div>
                   <strong>{invitation.email}</strong>
                   <small>
-                    {invitation.role.toLowerCase()} · expires {new Intl.DateTimeFormat("en", { dateStyle: "medium" }).format(new Date(invitation.expiresAt))}
+                    {invitation.role.toLowerCase()} · expires{" "}
+                    {new Intl.DateTimeFormat("en", {
+                      dateStyle: "medium",
+                    }).format(new Date(invitation.expiresAt))}
                   </small>
                 </div>
-                <button
-                  className="button button-secondary button-small"
-                  type="button"
-                  disabled={processingId === invitation.id}
-                  onClick={() => void revokeInvitation(invitation)}
-                >
-                  {processingId === invitation.id ? (
-                    <LoaderCircle className="button-spinner" size={15} />
-                  ) : (
-                    <X size={15} />
+                <div className="inline-actions">
+                  <button
+                    className="button button-secondary button-small"
+                    type="button"
+                    disabled={processingId === invitation.id}
+                    onClick={() => void resendInvitation(invitation)}
+                  >
+                    {processingId === invitation.id ? (
+                      <LoaderCircle className="button-spinner" size={15} />
+                    ) : (
+                      <RefreshCcw size={15} />
+                    )}
+                    Resend
+                  </button>
+                  {inviteLinks[invitation.id] && (
+                    <button
+                      className="button button-secondary button-small"
+                      type="button"
+                      onClick={() => void copyInvitation(invitation)}
+                    >
+                      <Copy size={15} />
+                      Copy link
+                    </button>
                   )}
-                  Revoke
-                </button>
+                  <button
+                    className="button button-secondary button-small"
+                    type="button"
+                    disabled={processingId === invitation.id}
+                    onClick={() => void revokeInvitation(invitation)}
+                  >
+                    <X size={15} />
+                    Revoke
+                  </button>
+                </div>
               </div>
             ))}
             {!invitations.length && (
@@ -384,6 +503,31 @@ export function MemberWorkspace() {
             )}
           </section>
         )}
+
+        <section className="dash-card role-guide-card">
+          <div className="dash-card-head">
+            <h2>Role guide</h2>
+            <Info size={17} />
+          </div>
+          <dl className="detail-list">
+            <div>
+              <dt>Owner</dt>
+              <dd>Full control, including ownership transfer and admins.</dd>
+            </div>
+            <div>
+              <dt>Admin</dt>
+              <dd>Manages the home, resources, members, and regular invites.</dd>
+            </div>
+            <div>
+              <dt>Member</dt>
+              <dd>Views the home and completes assigned maintenance.</dd>
+            </div>
+            <div>
+              <dt>Viewer</dt>
+              <dd>Read-only household access.</dd>
+            </div>
+          </dl>
+        </section>
       </div>
     </main>
   );

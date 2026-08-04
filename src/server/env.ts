@@ -4,16 +4,24 @@ const optionalUrl = z.string().url().optional().or(z.literal(""));
 
 export const envSchema = z
   .object({
-    NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
+    NODE_ENV: z
+      .enum(["development", "test", "production"])
+      .default("development"),
     NEXT_PUBLIC_APP_URL: z.string().url().default("http://localhost:3000"),
     NEXT_PUBLIC_PRODUCT_NAME: z.string().default("Homi"),
-    NEXT_PUBLIC_SUPPORT_EMAIL: z.string().email().default("support@homi.local"),
+    NEXT_PUBLIC_SUPPORT_EMAIL: z
+      .string()
+      .email()
+      .default("support@homi.local"),
     DATABASE_URL: z
       .string()
       .min(1)
       .default("postgresql://homi:homi@127.0.0.1:5432/homi"),
     DATABASE_SSL: z.enum(["true", "false"]).default("false"),
-    BETTER_AUTH_SECRET: z.string().min(32).default("development-only-secret-change-before-production"),
+    BETTER_AUTH_SECRET: z
+      .string()
+      .min(32)
+      .default("development-only-secret-change-before-production"),
     SMTP_HOST: z.string().default("127.0.0.1"),
     SMTP_PORT: z.coerce.number().int().min(1).max(65535).default(1025),
     SMTP_USER: z.string().optional(),
@@ -31,15 +39,36 @@ export const envSchema = z
     REDIS_URL: optionalUrl,
     GOOGLE_CLIENT_ID: z.string().optional(),
     GOOGLE_CLIENT_SECRET: z.string().optional(),
-    MAX_UPLOAD_BYTES: z.coerce.number().int().positive().default(10 * 1024 * 1024),
-    CRON_SECRET: z.string().min(24).default("development-cron-secret"),
-    LOG_LEVEL: z.enum(["fatal", "error", "warn", "info", "debug", "trace"]).default("info"),
+    VAPID_PUBLIC_KEY: z.string().optional(),
+    VAPID_PRIVATE_KEY: z.string().optional(),
+    VAPID_SUBJECT: z.string().optional(),
+    MAX_UPLOAD_BYTES: z.coerce
+      .number()
+      .int()
+      .positive()
+      .default(10 * 1024 * 1024),
+    CRON_SECRET: z
+      .string()
+      .min(24)
+      .default("development-cron-secret"),
+    LOG_LEVEL: z
+      .enum(["fatal", "error", "warn", "info", "debug", "trace"])
+      .default("info"),
     SUPPORT_EMAIL: z.string().email().default("support@homi.local"),
   })
   .superRefine((env, ctx) => {
     if (env.STORAGE_PROVIDER === "s3") {
-      for (const key of ["S3_ENDPOINT", "S3_ACCESS_KEY_ID", "S3_SECRET_ACCESS_KEY"] as const) {
-        if (!env[key]) ctx.addIssue({ code: "custom", path: [key], message: `${key} is required for S3` });
+      for (const key of [
+        "S3_ENDPOINT",
+        "S3_ACCESS_KEY_ID",
+        "S3_SECRET_ACCESS_KEY",
+      ] as const) {
+        if (!env[key])
+          ctx.addIssue({
+            code: "custom",
+            path: [key],
+            message: `${key} is required for S3`,
+          });
       }
     }
     if (Boolean(env.GOOGLE_CLIENT_ID) !== Boolean(env.GOOGLE_CLIENT_SECRET)) {
@@ -47,6 +76,19 @@ export const envSchema = z
         code: "custom",
         path: ["GOOGLE_CLIENT_SECRET"],
         message: "Google OAuth variables must be provided together",
+      });
+    }
+    const vapidValues = [
+      env.VAPID_PUBLIC_KEY,
+      env.VAPID_PRIVATE_KEY,
+      env.VAPID_SUBJECT,
+    ];
+    if (vapidValues.some(Boolean) && !vapidValues.every(Boolean)) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["VAPID_PUBLIC_KEY"],
+        message:
+          "VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY, and VAPID_SUBJECT must be provided together",
       });
     }
   });
@@ -68,5 +110,8 @@ export function assertProductionEnv(): void {
     !process.env.BETTER_AUTH_SECRET && "BETTER_AUTH_SECRET",
     !process.env.CRON_SECRET && "CRON_SECRET",
   ].filter(Boolean);
-  if (unsafe.length) throw new Error(`Missing production environment variables: ${unsafe.join(", ")}`);
+  if (unsafe.length)
+    throw new Error(
+      `Missing production environment variables: ${unsafe.join(", ")}`,
+    );
 }
