@@ -97,20 +97,32 @@ export function CostWorkspace() {
   useEffect(() => {
     if (!homeId) return;
     const { from, to } = range(period);
-    setLoading(true);
-    void fetch(
-      `/api/costs?homeId=${homeId}&from=${from.toISOString()}&to=${to.toISOString()}`,
-    )
-      .then((response) => response.json())
-      .then((result) =>
-        setPayload({
-          totals: result.totals ?? [],
-          monthly: result.monthly ?? [],
-          byAsset: result.byAsset ?? [],
-          entries: result.entries ?? [],
-        }),
+    const controller = new AbortController();
+    const timer = window.setTimeout(() => {
+      setLoading(true);
+      void fetch(
+        `/api/costs?homeId=${homeId}&from=${from.toISOString()}&to=${to.toISOString()}`,
+        { signal: controller.signal },
       )
-      .finally(() => setLoading(false));
+        .then((response) => response.json())
+        .then((result) =>
+          setPayload({
+            totals: result.totals ?? [],
+            monthly: result.monthly ?? [],
+            byAsset: result.byAsset ?? [],
+            entries: result.entries ?? [],
+          }),
+        )
+        .catch((error) => {
+          if (error instanceof DOMException && error.name === "AbortError") return;
+          setPayload({ totals: [], monthly: [], byAsset: [], entries: [] });
+        })
+        .finally(() => setLoading(false));
+    }, 0);
+    return () => {
+      controller.abort();
+      window.clearTimeout(timer);
+    };
   }, [homeId, period]);
 
   const maxMonthly = useMemo(
@@ -236,7 +248,10 @@ export function CostWorkspace() {
               </div>
               <b>{money(asset.total, asset.currency)}</b>
               {asset.assetId && (
-                <Link href={`/assets/${asset.assetId}`} aria-label={`Open ${asset.assetName}`}>
+                <Link
+                  href={`/assets/${asset.assetId}`}
+                  aria-label={`Open ${asset.assetName}`}
+                >
                   <ExternalLink size={15} />
                 </Link>
               )}
@@ -259,7 +274,10 @@ export function CostWorkspace() {
         {payload.entries.map((entry) => {
           const Icon = entry.type === "MAINTENANCE" ? Wrench : Hammer;
           return (
-            <article className="dash-task cost-entry" key={`${entry.type}-${entry.id}`}>
+            <article
+              className="dash-task cost-entry"
+              key={`${entry.type}-${entry.id}`}
+            >
               <span>
                 <Icon size={16} />
               </span>
