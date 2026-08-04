@@ -89,7 +89,21 @@ jobs:
       - run: bun run build
       - run: bunx playwright install --with-deps chromium
       - run: bun run db:seed
-      - run: bun run test:e2e --project=desktop
+      - name: Run Playwright
+        run: |
+          set -o pipefail
+          bun run test:e2e --project=desktop 2>&1 | tee playwright-output.log
+      - name: Upload Playwright diagnostics
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-diagnostics
+          path: |
+            playwright-output.log
+            test-results
+            playwright-report
+          if-no-files-found: warn
+          retention-days: 7
 
   container:
     needs: [quality, application]
