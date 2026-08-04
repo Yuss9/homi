@@ -9,7 +9,7 @@ import {
   uniqueIndex,
   uuid,
 } from "drizzle-orm/pg-core";
-import { documents, homes, user } from "./schema";
+import { assets, documents, homes, notifications, user } from "./schema";
 
 const timestamps = {
   createdAt: timestamp("created_at", { withTimezone: true })
@@ -223,5 +223,51 @@ export const documentOcr = pgTable(
   (table) => [
     uniqueIndex("document_ocr_document_unique").on(table.documentId),
     index("document_ocr_creator_idx").on(table.createdBy),
+  ],
+);
+
+export const assetIdentifiers = pgTable(
+  "asset_identifiers",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    assetId: uuid("asset_id")
+      .notNull()
+      .references(() => assets.id, { onDelete: "cascade" }),
+    barcode: text("barcode").notNull(),
+    format: text("format"),
+    updatedBy: uuid("updated_by")
+      .notNull()
+      .references(() => user.id, { onDelete: "restrict" }),
+    ...timestamps,
+  },
+  (table) => [
+    uniqueIndex("asset_identifiers_asset_unique").on(table.assetId),
+    uniqueIndex("asset_identifiers_barcode_unique").on(table.barcode),
+  ],
+);
+
+export const notificationSnoozes = pgTable(
+  "notification_snoozes",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    notificationId: uuid("notification_id")
+      .notNull()
+      .references(() => notifications.id, { onDelete: "cascade" }),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    snoozedUntil: timestamp("snoozed_until", { withTimezone: true }).notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (table) => [
+    uniqueIndex("notification_snoozes_notification_unique").on(
+      table.notificationId,
+    ),
+    index("notification_snoozes_user_until_idx").on(
+      table.userId,
+      table.snoozedUntil,
+    ),
   ],
 );
