@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
+    android:configure="dev.yuss.homi.widget.HomiWidgetConfigurationActivity"
+    android:description="@string/homi_widget_description"
+    android:initialKeyguardLayout="@layout/homi_widget"
+    android:initialLayout="@layout/homi_widget"
+    android:minHeight="110dp"
+    android:minWidth="180dp"
+    android:previewLayout="@layout/homi_widget"
+    android:resizeMode="horizontal|vertical"
+    android:targetCellHeight="2"
+    android:targetCellWidth="2"
+    android:updatePeriodMillis="1800000"
+    android:widgetCategory="home_screen|keyguard"
+    android:widgetFeatures="configuration_optional|reconfigurable" />
