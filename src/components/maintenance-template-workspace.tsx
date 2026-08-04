@@ -81,6 +81,20 @@ export function MaintenanceTemplateWorkspace() {
     void Promise.resolve().then(() => load(homeId));
   }, [homeId]);
 
+  useEffect(() => {
+    if (!selected) return;
+    const previousOverflow = document.body.style.overflow;
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setSelected(null);
+    };
+    document.body.style.overflow = "hidden";
+    window.addEventListener("keydown", closeOnEscape);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", closeOnEscape);
+    };
+  }, [selected]);
+
   const categories = useMemo(
     () => ["All", ...new Set(templates.map((template) => template.category))],
     [templates],
@@ -248,7 +262,11 @@ export function MaintenanceTemplateWorkspace() {
 
       <section className="template-grid" aria-label="Maintenance templates">
         {visible.map((template) => (
-          <article className="template-card" key={template.id}>
+          <article
+            className="template-card"
+            data-source={template.source.toLowerCase()}
+            key={template.id}
+          >
             <div className="template-card-top">
               <span>
                 {template.source === "SYSTEM" ? (
@@ -399,7 +417,13 @@ export function MaintenanceTemplateWorkspace() {
       )}
 
       {selected && (
-        <div className="modal-backdrop" role="presentation">
+        <div
+          className="modal-backdrop template-modal-backdrop"
+          role="presentation"
+          onMouseDown={(event) => {
+            if (event.currentTarget === event.target) setSelected(null);
+          }}
+        >
           <form
             className="command-dialog schedule-template-dialog"
             onSubmit={applyTemplate}
@@ -407,10 +431,14 @@ export function MaintenanceTemplateWorkspace() {
             aria-modal="true"
             aria-labelledby="schedule-template-title"
           >
-            <div className="dash-card-head">
+            <div className="dash-card-head template-dialog-head">
               <div>
                 <small>{selected.category}</small>
                 <h2 id="schedule-template-title">{selected.title}</h2>
+                <p className="template-dialog-copy">
+                  Choose where this routine belongs and when Homi should surface
+                  its first reminder.
+                </p>
               </div>
               <button
                 className="icon-action"
@@ -421,46 +449,57 @@ export function MaintenanceTemplateWorkspace() {
                 <X size={17} />
               </button>
             </div>
-            <div className="field">
-              <label htmlFor="template-asset">Asset</label>
-              <select id="template-asset" name="assetId">
-                <option value="">Whole home</option>
-                {assets.map((asset) => (
-                  <option key={asset.id} value={asset.id}>
-                    {asset.name}
-                  </option>
-                ))}
-              </select>
+            <div className="template-dialog-fields">
+              <div className="field">
+                <label htmlFor="template-asset">Equipment or area</label>
+                <select id="template-asset" name="assetId">
+                  <option value="">Whole home</option>
+                  {assets.map((asset) => (
+                    <option key={asset.id} value={asset.id}>
+                      {asset.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="field">
+                <label htmlFor="template-assignee">Responsible person</label>
+                <select id="template-assignee" name="assignedTo">
+                  <option value="">Decide later</option>
+                  {members.map((member) => (
+                    <option key={member.userId} value={member.userId}>
+                      {member.name} · {member.role.toLowerCase()}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="field">
+                <label htmlFor="template-next-due">First due date</label>
+                <input
+                  id="template-next-due"
+                  name="nextDueAt"
+                  type="date"
+                  defaultValue={dateInput()}
+                  required
+                />
+              </div>
             </div>
-            <div className="field">
-              <label htmlFor="template-assignee">Assigned to</label>
-              <select id="template-assignee" name="assignedTo">
-                <option value="">Unassigned</option>
-                {members.map((member) => (
-                  <option key={member.userId} value={member.userId}>
-                    {member.name} · {member.role.toLowerCase()}
-                  </option>
-                ))}
-              </select>
+            <div className="template-dialog-actions">
+              <button
+                className="button button-secondary"
+                type="button"
+                onClick={() => setSelected(null)}
+              >
+                Cancel
+              </button>
+              <button className="button" disabled={processing === selected.id}>
+                {processing === selected.id ? (
+                  <LoaderCircle className="button-spinner" size={16} />
+                ) : (
+                  <Check size={16} />
+                )}
+                Add to schedule
+              </button>
             </div>
-            <div className="field">
-              <label htmlFor="template-next-due">First due date</label>
-              <input
-                id="template-next-due"
-                name="nextDueAt"
-                type="date"
-                defaultValue={dateInput()}
-                required
-              />
-            </div>
-            <button className="button" disabled={processing === selected.id}>
-              {processing === selected.id ? (
-                <LoaderCircle className="button-spinner" size={16} />
-              ) : (
-                <Check size={16} />
-              )}
-              Add to schedule
-            </button>
           </form>
         </div>
       )}
