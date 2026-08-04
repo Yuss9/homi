@@ -105,6 +105,12 @@ function toggleValue(values: string[], value: string) {
     : [...values, value];
 }
 
+async function fetchSavedSearches(homeId: string) {
+  const response = await fetch(`/api/saved-searches?homeId=${homeId}`);
+  const payload = await response.json();
+  return (payload.searches ?? []) as SavedSearch[];
+}
+
 export function GlobalCommandPalette({ selectedHomeId }: { selectedHomeId: string }) {
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
@@ -121,13 +127,6 @@ export function GlobalCommandPalette({ selectedHomeId }: { selectedHomeId: strin
   const [loading, setLoading] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
 
-  async function loadSaved() {
-    if (!selectedHomeId) return;
-    const response = await fetch(`/api/saved-searches?homeId=${selectedHomeId}`);
-    const payload = await response.json();
-    setSaved(payload.searches ?? []);
-  }
-
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {
@@ -141,10 +140,18 @@ export function GlobalCommandPalette({ selectedHomeId }: { selectedHomeId: strin
   }, []);
 
   useEffect(() => {
-    if (!open) return;
-    const timer = window.setTimeout(() => inputRef.current?.focus(), 20);
-    void loadSaved();
-    return () => window.clearTimeout(timer);
+    if (!open || !selectedHomeId) return;
+    let cancelled = false;
+    const timer = window.setTimeout(() => {
+      inputRef.current?.focus();
+      void fetchSavedSearches(selectedHomeId).then((items) => {
+        if (!cancelled) setSaved(items);
+      });
+    }, 20);
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timer);
+    };
   }, [open, selectedHomeId]);
 
   useEffect(() => {
@@ -197,6 +204,11 @@ export function GlobalCommandPalette({ selectedHomeId }: { selectedHomeId: strin
     router.push(href);
   }
 
+  async function refreshSaved() {
+    if (!selectedHomeId) return;
+    setSaved(await fetchSavedSearches(selectedHomeId));
+  }
+
   async function saveCurrentSearch() {
     const name = window.prompt("Name this saved search");
     if (!name?.trim() || query.trim().length < 2) return;
@@ -210,12 +222,12 @@ export function GlobalCommandPalette({ selectedHomeId }: { selectedHomeId: strin
         filters: { types: selectedTypes, statuses: selectedStatuses },
       }),
     });
-    await loadSaved();
+    await refreshSaved();
   }
 
   async function removeSaved(searchId: string) {
     await fetch(`/api/saved-searches/${searchId}`, { method: "DELETE" });
-    await loadSaved();
+    await refreshSaved();
   }
 
   function applySaved(search: SavedSearch) {
@@ -411,9 +423,16 @@ export function GlobalCommandPalette({ selectedHomeId }: { selectedHomeId: strin
               )}
             </div>
             <footer className="command-footer">
-              <span><kbd>↑</kbd><kbd>↓</kbd> Navigate</span>
-              <span><kbd>↵</kbd> Open</span>
-              <span><kbd>esc</kbd> Close</span>
+              <span>
+                <kbd>↑</kbd>
+                <kbd>↓</kbd> Navigate
+              </span>
+              <span>
+                <kbd>↵</kbd> Open
+              </span>
+              <span>
+                <kbd>esc</kbd> Close
+              </span>
             </footer>
           </div>
         </div>
