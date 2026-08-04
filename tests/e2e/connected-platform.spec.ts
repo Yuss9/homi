@@ -163,7 +163,9 @@ test("connected mobile platform shares one secure household workflow", async ({
   await expect(
     page.getByRole("heading", { name: "Keep Homi one tap away." }),
   ).toBeVisible();
-  await expect(page.getByText("Offline mode is intentionally disabled")).toBeVisible();
+  await expect(
+    page.getByText("Offline mode is intentionally disabled"),
+  ).toBeVisible();
 
   await page.goto("/scan");
   await expect(
@@ -171,7 +173,11 @@ test("connected mobile platform shares one secure household workflow", async ({
   ).toBeVisible();
   await page.getByLabel("Barcode, serial or product reference").fill(barcode);
   await page.getByRole("button", { name: "Search Homi" }).last().click();
-  await expect(page.getByText(`Connected boiler ${suffix}`)).toBeVisible();
+  await expect(
+    page
+      .locator(".scanner-match")
+      .getByText(`Connected boiler ${suffix}`, { exact: true }),
+  ).toBeVisible();
 
   expect(
     (
