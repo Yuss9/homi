@@ -2,7 +2,11 @@ import { desc, eq } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "@/db";
 import { repairRecords } from "@/db/schema";
-import { requireHomeAccess, requireHomeRole } from "@/src/server/authorization";
+import {
+  requireAssetInHome,
+  requireHomeAccess,
+  requireHomeRole,
+} from "@/src/server/authorization";
 import { errorResponse, requestId } from "@/src/server/http";
 
 const repairInput = z.object({
@@ -49,6 +53,7 @@ export async function POST(request: Request) {
       "ADMIN",
       "MEMBER",
     ]);
+    await requireAssetInHome(input.assetId, input.homeId);
     const [repair] = await db
       .insert(repairRecords)
       .values({ ...input, createdBy: session.user.id })
