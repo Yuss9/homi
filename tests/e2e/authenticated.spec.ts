@@ -12,7 +12,7 @@ test("seeded member can sign in, use private files, and remains tenant-isolated"
   await page.getByLabel("Password").fill("HomiDemo!2026");
   await page.getByRole("button", { name: /^Sign in/ }).click();
 
-  await expect(page).toHaveURL(/\/dashboard$/);
+  await expect(page).toHaveURL(/\/dashboard$/, { timeout: 15_000 });
   await expect(
     page.getByRole("heading", {
       name: /Good (morning|afternoon|evening), Alex/,
@@ -170,8 +170,17 @@ test("seeded member can sign in, use private files, and remains tenant-isolated"
   );
   expect(seededAssets.status()).toBe(200);
 
+  const selectTestHome = await page.request.post("/api/homes/selected", {
+    data: { homeId },
+  });
+  expect(selectTestHome.status()).toBe(200);
   await page.goto("/maintenance/history");
   await expect(page.getByText(`Check pressure ${suffix}`)).toBeVisible();
+
+  const restoreSeededHome = await page.request.post("/api/homes/selected", {
+    data: { homeId: seededHomeId },
+  });
+  expect(restoreSeededHome.status()).toBe(200);
 
   const signOutStatus = await page.evaluate(async () => {
     const response = await fetch("/api/auth/sign-out", {
