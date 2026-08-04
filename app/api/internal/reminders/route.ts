@@ -2,6 +2,7 @@ import { getEnv } from "@/src/server/env";
 import { errorResponse, requestId } from "@/src/server/http";
 import { processNotificationPush } from "@/src/server/jobs/notification-push";
 import { processReminders } from "@/src/server/jobs/reminders";
+import { processWebhookDeliveries } from "@/src/server/integrations/webhooks";
 
 export async function POST(request: Request) {
   const id = requestId(request);
@@ -16,7 +17,11 @@ export async function POST(request: Request) {
     const startedAt = new Date();
     const reminders = await processReminders(startedAt);
     const push = await processNotificationPush(startedAt);
-    return Response.json({ result: { reminders, push }, requestId: id });
+    const webhooks = await processWebhookDeliveries();
+    return Response.json({
+      result: { reminders, push, webhooks },
+      requestId: id,
+    });
   } catch (error) {
     return errorResponse(error, id);
   }
