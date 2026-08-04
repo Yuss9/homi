@@ -3,6 +3,13 @@
 Notable changes to Homi are recorded here. This file is maintained by Release
 Please from Conventional Commit pull request titles.
 
+## [1.4.0](https://github.com/Yuss9/homi/compare/v1.3.0...v1.4.0) (2026-08-04)
+
+
+### Features
+
+* add household sharing and user profiles ([#21](https://github.com/Yuss9/homi/issues/21)) ([8c0d45d](https://github.com/Yuss9/homi/commit/8c0d45d30488b593df1b7c7868b71638c9b783e2))
+
 ## [1.3.0](https://github.com/Yuss9/homi/compare/v1.2.0...v1.3.0) (2026-08-04)
 
 
