@@ -7,6 +7,7 @@ import "./resource-management.css";
 import "./household-profile.css";
 import "./high-value-tools.css";
 import "./connected-platform.css";
+import "./ui-polish.css";
 
 const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
 const geistMono = Geist_Mono({
