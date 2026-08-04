@@ -3,6 +3,7 @@ import { and, eq, ilike, isNull } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "../../../db";
 import { assets } from "../../../db/schema";
+import { requireRoomInHome } from "../authorization";
 
 export const assetInput = z.object({
   homeId: z.string().uuid(),
@@ -20,6 +21,7 @@ export const assetInput = z.object({
 
 export async function createAsset(userId: string, raw: unknown) {
   const input = assetInput.parse(raw);
+  if (input.roomId) await requireRoomInHome(input.roomId, input.homeId);
   const [asset] = await db.insert(assets).values({ ...input, createdBy: userId }).returning();
   return asset;
 }
@@ -38,4 +40,3 @@ export async function listAssets(homeId: string, search?: string) {
     .orderBy(assets.name)
     .limit(100);
 }
-
