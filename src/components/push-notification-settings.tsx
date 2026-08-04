@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   BellRing,
   Check,
@@ -17,6 +17,12 @@ function applicationServerKey(value: string) {
   return Uint8Array.from(binary, (character) => character.charCodeAt(0));
 }
 
+async function currentSubscription() {
+  const registration = await navigator.serviceWorker.register("/sw.js");
+  await navigator.serviceWorker.ready;
+  return registration.pushManager.getSubscription();
+}
+
 export function PushNotificationSettings() {
   const [supported, setSupported] = useState(false);
   const [configured, setConfigured] = useState(false);
@@ -27,32 +33,27 @@ export function PushNotificationSettings() {
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
 
-  async function currentSubscription() {
-    const registration = await navigator.serviceWorker.register("/sw.js");
-    await navigator.serviceWorker.ready;
-    return registration.pushManager.getSubscription();
-  }
-
-  async function load() {
+  const load = useCallback(async () => {
     const browserSupported =
       "serviceWorker" in navigator &&
       "PushManager" in window &&
       "Notification" in window;
-    setSupported(browserSupported);
     const response = await fetch("/api/push/subscriptions");
     const payload = await response.json();
+    const subscription = browserSupported
+      ? await currentSubscription()
+      : null;
+    setSupported(browserSupported);
     setConfigured(Boolean(payload.configured));
     setPublicKey(payload.publicKey ?? "");
     setSubscriptionCount(payload.subscriptionCount ?? 0);
-    if (browserSupported) {
-      const subscription = await currentSubscription();
-      setDeviceSubscribed(Boolean(subscription));
-    }
-  }
+    setDeviceSubscribed(Boolean(subscription));
+  }, []);
 
   useEffect(() => {
-    void load();
-  }, []);
+    const timer = window.setTimeout(() => void load(), 0);
+    return () => window.clearTimeout(timer);
+  }, [load]);
 
   async function enable() {
     setLoading(true);
@@ -136,7 +137,9 @@ export function PushNotificationSettings() {
       const response = await fetch("/api/push/test", { method: "POST" });
       const payload = await response.json();
       if (!response.ok) {
-        throw new Error(payload.error?.message ?? "The test could not be delivered.");
+        throw new Error(
+          payload.error?.message ?? "The test could not be delivered.",
+        );
       }
       setMessage("Test sent. It may appear after you leave this tab.");
     } catch (nextError) {
@@ -170,10 +173,13 @@ export function PushNotificationSettings() {
         </span>
         <div>
           <strong>
-            {deviceSubscribed ? "This device is connected" : "This device is off"}
+            {deviceSubscribed
+              ? "This device is connected"
+              : "This device is off"}
           </strong>
           <small>
-            {subscriptionCount} active device{subscriptionCount === 1 ? "" : "s"}
+            {subscriptionCount} active device
+            {subscriptionCount === 1 ? "" : "s"}
           </small>
         </div>
       </div>
