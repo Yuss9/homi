@@ -30,6 +30,20 @@ jobs:
       - run: bun run typecheck
       - run: bun run lint
       - run: bun run test
+      - name: Validate connected integration sources
+        run: |
+          python3 -m compileall -q custom_components integrations/mqtt-bridge
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+
+          roots = [Path("custom_components/homi"), Path("native")]
+          files = [path for root in roots for path in root.rglob("*.json")]
+          files += [Path("hacs.json"), Path("native/package.json")]
+          for path in sorted(set(files)):
+              json.loads(path.read_text(encoding="utf-8"))
+              print(f"validated {path}")
+          PY
 
   application:
     runs-on: ubuntu-latest
@@ -91,3 +105,10 @@ jobs:
           tags: homi:ci
           cache-from: type=gha
           cache-to: type=gha,mode=max
+      - uses: docker/build-push-action@v6
+        with:
+          context: integrations/mqtt-bridge
+          push: false
+          tags: homi-mqtt-bridge:ci
+          cache-from: type=gha,scope=mqtt-bridge
+          cache-to: type=gha,mode=max,scope=mqtt-bridge
