@@ -1,4 +1,4 @@
-import { desc, eq } from "drizzle-orm";
+import { and, desc, eq, sql } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "@/db";
 import { repairRecords } from "@/db/schema";
@@ -15,10 +15,21 @@ const repairInput = z.object({
   title: z.string().trim().min(1).max(160),
   description: z.string().trim().max(2000).optional(),
   issueDate: z.string().date(),
+  repairDate: z.string().date().optional(),
   status: z
     .enum(["OPEN", "SCHEDULED", "IN_PROGRESS", "COMPLETED", "CANCELLED"])
     .default("OPEN"),
   provider: z.string().trim().max(160).optional(),
+  cost: z
+    .string()
+    .regex(/^\d{1,10}(\.\d{1,2})?$/)
+    .optional(),
+  currency: z
+    .string()
+    .trim()
+    .length(3)
+    .transform((value) => value.toUpperCase())
+    .default("EUR"),
   warrantyClaim: z.boolean().default(false),
 });
 
@@ -28,14 +39,24 @@ export async function GET(request: Request) {
     const homeId = new URL(request.url).searchParams.get("homeId");
     if (!homeId)
       return Response.json(
-        { error: { code: "VALIDATION_ERROR", message: "homeId is required" } },
+        {
+          error: {
+            code: "VALIDATION_ERROR",
+            message: "homeId is required",
+          },
+        },
         { status: 400 },
       );
     await requireHomeAccess(homeId);
     const repairs = await db
       .select()
       .from(repairRecords)
-      .where(eq(repairRecords.homeId, homeId))
+      .where(
+        and(
+          eq(repairRecords.homeId, homeId),
+          sql`"repair_records"."archived_at" is null`,
+        ),
+      )
       .orderBy(desc(repairRecords.createdAt))
       .limit(100);
     return Response.json({ repairs, requestId: id });

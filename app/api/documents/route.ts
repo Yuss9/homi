@@ -1,4 +1,4 @@
-import { desc, eq, inArray } from "drizzle-orm";
+import { and, desc, eq, inArray, sql } from "drizzle-orm";
 import { db } from "@/db";
 import {
   documents,
@@ -15,14 +15,22 @@ export async function GET(request: Request) {
     const homeId = new URL(request.url).searchParams.get("homeId");
     if (!homeId)
       return Response.json(
-        { error: { code: "VALIDATION_ERROR", message: "homeId is required" } },
+        {
+          error: {
+            code: "VALIDATION_ERROR",
+            message: "homeId is required",
+          },
+        },
         { status: 400 },
       );
     await requireHomeAccess(homeId);
     const rows = await db
       .select({
         id: documents.id,
+        homeId: documents.homeId,
+        assetId: documents.assetId,
         title: documents.title,
+        description: documents.description,
         type: documents.type,
         documentDate: documents.documentDate,
         expiryDate: documents.expiryDate,
@@ -34,7 +42,12 @@ export async function GET(request: Request) {
       })
       .from(documents)
       .innerJoin(storedFiles, eq(storedFiles.id, documents.fileId))
-      .where(eq(documents.homeId, homeId))
+      .where(
+        and(
+          eq(documents.homeId, homeId),
+          sql`"documents"."archived_at" is null`,
+        ),
+      )
       .orderBy(desc(documents.createdAt))
       .limit(100);
     const tagRows = rows.length

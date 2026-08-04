@@ -1,0 +1,45 @@
+.inline-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.auth-form textarea {
+  width: 100%;
+  min-height: 92px;
+  resize: vertical;
+}
+
+.resource-button {
+  min-width: 0;
+  flex: 1;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.resource-button strong,
+.resource-button small {
+  display: block;
+}
+
+.dash-task.has-action > .inline-actions {
+  justify-content: flex-end;
+}
+
+.document-row.has-action {
+  grid-template-columns: auto minmax(0, 1fr) auto auto auto;
+}
+
+@media (max-width: 760px) {
+  .document-row.has-action {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+  }
+
+  .document-row.has-action > .icon-action:nth-last-child(-n + 2) {
+    margin-top: 8px;
+  }
+}

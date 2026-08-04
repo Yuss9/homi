@@ -6,6 +6,7 @@ import { LoaderCircle, Package, Plus, Search } from "lucide-react";
 import { ActionFeedback } from "@/src/components/action-feedback";
 
 type Home = { id: string; name: string };
+type Room = { id: string; name: string };
 type Asset = {
   id: string;
   name: string;
@@ -13,12 +14,21 @@ type Asset = {
   brand?: string | null;
   model?: string | null;
   status: string;
+  purchasePrice?: string | null;
+  currency?: string | null;
+  retailer?: string | null;
   warrantyEndDate?: string | null;
+};
+
+const value = (form: FormData, name: string) => {
+  const result = String(form.get(name) ?? "").trim();
+  return result || undefined;
 };
 
 export function AssetWorkspace() {
   const [homes, setHomes] = useState<Home[]>([]);
   const [homeId, setHomeId] = useState("");
+  const [rooms, setRooms] = useState<Room[]>([]);
   const [assets, setAssets] = useState<Asset[]>([]);
   const [query, setQuery] = useState("");
   const [error, setError] = useState("");
@@ -35,6 +45,13 @@ export function AssetWorkspace() {
         setHomeId(next[0]?.id ?? "");
       });
   }, []);
+
+  useEffect(() => {
+    if (!homeId) return;
+    void fetch(`/api/rooms?homeId=${homeId}`)
+      .then((response) => response.json())
+      .then((payload) => setRooms(payload.rooms ?? []));
+  }, [homeId]);
 
   useEffect(() => {
     if (!homeId) return;
@@ -55,17 +72,29 @@ export function AssetWorkspace() {
 
     try {
       const form = new FormData(formElement);
+      const expectedLifetimeYears = value(form, "expectedLifetimeYears");
       const response = await fetch("/api/assets", {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
           homeId,
+          roomId: value(form, "roomId"),
           name: form.get("name"),
           category: form.get("category"),
-          brand: form.get("brand") || undefined,
-          model: form.get("model") || undefined,
-          serialNumber: form.get("serialNumber") || undefined,
-          warrantyEndDate: form.get("warrantyEndDate") || undefined,
+          brand: value(form, "brand"),
+          model: value(form, "model"),
+          serialNumber: value(form, "serialNumber"),
+          description: value(form, "description"),
+          purchaseDate: value(form, "purchaseDate"),
+          purchasePrice: value(form, "purchasePrice"),
+          currency: value(form, "currency") ?? "EUR",
+          retailer: value(form, "retailer"),
+          installationDate: value(form, "installationDate"),
+          warrantyStartDate: value(form, "warrantyStartDate"),
+          warrantyEndDate: value(form, "warrantyEndDate"),
+          expectedLifetimeYears: expectedLifetimeYears
+            ? Number(expectedLifetimeYears)
+            : undefined,
           status: "ACTIVE",
         }),
       });
@@ -94,12 +123,19 @@ export function AssetWorkspace() {
         <div>
           <small>Inventory</small>
           <h1>Assets</h1>
-          <p>Appliances, systems, furniture, and the details worth keeping.</p>
+          <p>
+            Keep purchase, installation, warranty, retailer, and lifetime
+            details together.
+          </p>
         </div>
         <select
           aria-label="Selected home"
           value={homeId}
-          onChange={(event) => setHomeId(event.target.value)}
+          onChange={(event) => {
+            setRooms([]);
+            setAssets([]);
+            setHomeId(event.target.value);
+          }}
         >
           {homes.map((home) => (
             <option key={home.id} value={home.id}>
@@ -145,6 +181,23 @@ export function AssetWorkspace() {
                       .filter(Boolean)
                       .join(" · ")}
                   </small>
+                  {(asset.purchasePrice ||
+                    asset.retailer ||
+                    asset.warrantyEndDate) && (
+                    <small>
+                      {[
+                        asset.purchasePrice
+                          ? `${asset.purchasePrice} ${asset.currency ?? "EUR"}`
+                          : null,
+                        asset.retailer,
+                        asset.warrantyEndDate
+                          ? `Warranty ${asset.warrantyEndDate}`
+                          : null,
+                      ]
+                        .filter(Boolean)
+                        .join(" · ")}
+                    </small>
+                  )}
                 </div>
                 <b>{asset.status.replaceAll("_", " ").toLowerCase()}</b>
               </Link>
@@ -172,6 +225,17 @@ export function AssetWorkspace() {
               disabled={!homeId || submitting}
               placeholder="Dishwasher"
             />
+          </div>
+          <div className="field">
+            <label htmlFor="asset-room">Room</label>
+            <select id="asset-room" name="roomId" disabled={submitting}>
+              <option value="">No room</option>
+              {rooms.map((room) => (
+                <option key={room.id} value={room.id}>
+                  {room.name}
+                </option>
+              ))}
+            </select>
           </div>
           <div className="field">
             <label htmlFor="asset-category">Category</label>
@@ -204,11 +268,81 @@ export function AssetWorkspace() {
             />
           </div>
           <div className="field">
-            <label htmlFor="asset-warranty">Warranty ends</label>
+            <label htmlFor="asset-description">Description</label>
+            <textarea
+              id="asset-description"
+              name="description"
+              disabled={submitting}
+            />
+          </div>
+          <div className="field">
+            <label htmlFor="asset-purchase-date">Purchase date</label>
             <input
-              id="asset-warranty"
+              id="asset-purchase-date"
+              name="purchaseDate"
+              type="date"
+              disabled={submitting}
+            />
+          </div>
+          <div className="field">
+            <label htmlFor="asset-price">Purchase price</label>
+            <input
+              id="asset-price"
+              name="purchasePrice"
+              inputMode="decimal"
+              placeholder="899.00"
+              disabled={submitting}
+            />
+          </div>
+          <div className="field">
+            <label htmlFor="asset-currency">Currency</label>
+            <input
+              id="asset-currency"
+              name="currency"
+              defaultValue="EUR"
+              maxLength={3}
+              disabled={submitting}
+            />
+          </div>
+          <div className="field">
+            <label htmlFor="asset-retailer">Retailer</label>
+            <input id="asset-retailer" name="retailer" disabled={submitting} />
+          </div>
+          <div className="field">
+            <label htmlFor="asset-installation">Installation date</label>
+            <input
+              id="asset-installation"
+              name="installationDate"
+              type="date"
+              disabled={submitting}
+            />
+          </div>
+          <div className="field">
+            <label htmlFor="asset-warranty-start">Warranty starts</label>
+            <input
+              id="asset-warranty-start"
+              name="warrantyStartDate"
+              type="date"
+              disabled={submitting}
+            />
+          </div>
+          <div className="field">
+            <label htmlFor="asset-warranty-end">Warranty ends</label>
+            <input
+              id="asset-warranty-end"
               name="warrantyEndDate"
               type="date"
+              disabled={submitting}
+            />
+          </div>
+          <div className="field">
+            <label htmlFor="asset-lifetime">Expected lifetime in years</label>
+            <input
+              id="asset-lifetime"
+              name="expectedLifetimeYears"
+              type="number"
+              min="1"
+              max="200"
               disabled={submitting}
             />
           </div>

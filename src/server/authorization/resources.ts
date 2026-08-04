@@ -1,6 +1,6 @@
 import "server-only";
 
-import { and, eq } from "drizzle-orm";
+import { and, eq, isNull, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { assets, documents, homeMembers, rooms } from "@/db/schema";
 import { AppError } from "@/src/server/errors";
@@ -13,7 +13,13 @@ export async function requireRoomInHome(roomId: string, homeId: string) {
   const [room] = await db
     .select({ id: rooms.id })
     .from(rooms)
-    .where(and(eq(rooms.id, roomId), eq(rooms.homeId, homeId)))
+    .where(
+      and(
+        eq(rooms.id, roomId),
+        eq(rooms.homeId, homeId),
+        sql`"rooms"."archived_at" is null`,
+      ),
+    )
     .limit(1);
   if (!room) notFound("Room");
   return room;
@@ -23,7 +29,13 @@ export async function requireAssetInHome(assetId: string, homeId: string) {
   const [asset] = await db
     .select({ id: assets.id })
     .from(assets)
-    .where(and(eq(assets.id, assetId), eq(assets.homeId, homeId)))
+    .where(
+      and(
+        eq(assets.id, assetId),
+        eq(assets.homeId, homeId),
+        isNull(assets.archivedAt),
+      ),
+    )
     .limit(1);
   if (!asset) notFound("Asset");
   return asset;
@@ -48,7 +60,13 @@ export async function requireDocumentInHome(
   const [document] = await db
     .select({ id: documents.id })
     .from(documents)
-    .where(and(eq(documents.id, documentId), eq(documents.homeId, homeId)))
+    .where(
+      and(
+        eq(documents.id, documentId),
+        eq(documents.homeId, homeId),
+        sql`"documents"."archived_at" is null`,
+      ),
+    )
     .limit(1);
   if (!document) notFound("Document");
   return document;
