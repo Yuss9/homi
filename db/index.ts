@@ -1,6 +1,7 @@
 import "server-only";
 import { drizzle } from "drizzle-orm/node-postgres";
 import { Pool } from "pg";
+import * as connectedPlatformSchema from "./connected-platform-schema";
 import * as coreSchema from "./schema";
 import * as highValueSchema from "./high-value-schema";
 
@@ -25,7 +26,11 @@ export const pool =
 if (process.env.NODE_ENV !== "production") globalForDb.homiPool = pool;
 
 export const db = drizzle(pool, {
-  schema: { ...coreSchema, ...highValueSchema },
+  schema: {
+    ...coreSchema,
+    ...highValueSchema,
+    ...connectedPlatformSchema,
+  },
 });
 
 export async function checkDatabase(): Promise<boolean> {
