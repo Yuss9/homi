@@ -21,10 +21,11 @@ export function LocalOcrWorkspace() {
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
-  const [detectorAvailable, setDetectorAvailable] = useState(true);
+  const [detectorAvailable, setDetectorAvailable] = useState(
+    () => typeof window !== "undefined" && "TextDetector" in window,
+  );
 
   useEffect(() => {
-    setDetectorAvailable("TextDetector" in window);
     void fetch("/api/homes")
       .then((response) => response.json())
       .then((payload) => {
@@ -69,13 +70,19 @@ export function LocalOcrWorkspace() {
         .filter((value): value is string => Boolean(value))
         .join("\n");
       if (!extracted) {
-        setError("No readable text was detected. Try a sharper photo or enter the text manually.");
+        setError(
+          "No readable text was detected. Try a sharper photo or enter the text manually.",
+        );
         return;
       }
       setText(extracted);
-      setMessage("Text was extracted locally in this browser. Review it before saving.");
+      setMessage(
+        "Text was extracted locally in this browser. Review it before saving.",
+      );
     } catch {
-      setError("The browser could not read this image. Try PNG or JPEG, or enter text manually.");
+      setError(
+        "The browser could not read this image. Try PNG or JPEG, or enter text manually.",
+      );
     } finally {
       setBusy(false);
     }
@@ -95,7 +102,8 @@ export function LocalOcrWorkspace() {
       }),
     });
     const payload = await response.json();
-    if (!response.ok) setError(payload.error?.message ?? "Could not save OCR text.");
+    if (!response.ok)
+      setError(payload.error?.message ?? "Could not save OCR text.");
     else setMessage("OCR text is indexed in Homi global search.");
     setBusy(false);
   }
@@ -111,20 +119,41 @@ export function LocalOcrWorkspace() {
             browser, then attach the reviewed text to an existing Homi document.
           </p>
         </div>
-        <select value={homeId} onChange={(event) => setHomeId(event.target.value)}>
-          {homes.map((home) => <option key={home.id} value={home.id}>{home.name}</option>)}
+        <select
+          value={homeId}
+          onChange={(event) => setHomeId(event.target.value)}
+        >
+          {homes.map((home) => (
+            <option key={home.id} value={home.id}>
+              {home.name}
+            </option>
+          ))}
         </select>
       </div>
 
-      {error && <p className="form-error" role="alert">{error}</p>}
-      {message && <p className="form-success" role="status">{message}</p>}
+      {error && (
+        <p className="form-error" role="alert">
+          {error}
+        </p>
+      )}
+      {message && (
+        <p className="form-success" role="status">
+          {message}
+        </p>
+      )}
 
       <div className="dash-grid">
         <section className="dash-card auth-form">
-          <div className="dash-card-head"><h2>Local source</h2><ScanText size={18} /></div>
+          <div className="dash-card-head">
+            <h2>Local source</h2>
+            <ScanText size={18} />
+          </div>
           <div className="ocr-privacy-note">
             <ShieldCheck size={20} />
-            <p>The selected image is processed on this device and is never uploaded by the OCR workflow.</p>
+            <p>
+              The selected image is processed on this device and is never
+              uploaded by the OCR workflow.
+            </p>
           </div>
           <div className="field">
             <label htmlFor="ocr-image">Photo or image page</label>
@@ -141,23 +170,39 @@ export function LocalOcrWorkspace() {
             />
           </div>
           {!detectorAvailable && (
-            <p className="muted-copy">Automatic OCR is unavailable here; manual text entry remains private and supported.</p>
+            <p className="muted-copy">
+              Automatic OCR is unavailable here; manual text entry remains
+              private and supported.
+            </p>
           )}
         </section>
 
         <section className="dash-card auth-form">
-          <div className="dash-card-head"><h2>Review and index</h2><FileSearch size={18} /></div>
+          <div className="dash-card-head">
+            <h2>Review and index</h2>
+            <FileSearch size={18} />
+          </div>
           <div className="field">
             <label htmlFor="ocr-document">Homi document</label>
-            <select id="ocr-document" value={documentId} onChange={(event) => setDocumentId(event.target.value)}>
+            <select
+              id="ocr-document"
+              value={documentId}
+              onChange={(event) => setDocumentId(event.target.value)}
+            >
               {documents.map((document) => (
-                <option key={document.id} value={document.id}>{document.title} · {document.type.toLowerCase()}</option>
+                <option key={document.id} value={document.id}>
+                  {document.title} · {document.type.toLowerCase()}
+                </option>
               ))}
             </select>
           </div>
           <div className="field">
             <label htmlFor="ocr-language">Detected language</label>
-            <select id="ocr-language" value={language} onChange={(event) => setLanguage(event.target.value)}>
+            <select
+              id="ocr-language"
+              value={language}
+              onChange={(event) => setLanguage(event.target.value)}
+            >
               <option value="">Automatic or unknown</option>
               <option value="en">English</option>
               <option value="fr">Français</option>
@@ -174,8 +219,17 @@ export function LocalOcrWorkspace() {
               placeholder="Review extracted text or paste it manually…"
             />
           </div>
-          <button className="button" type="button" disabled={!documentId || !text.trim() || busy} onClick={() => void save()}>
-            {busy ? <LoaderCircle className="button-spinner" size={17} /> : <ScanText size={17} />}
+          <button
+            className="button"
+            type="button"
+            disabled={!documentId || !text.trim() || busy}
+            onClick={() => void save()}
+          >
+            {busy ? (
+              <LoaderCircle className="button-spinner" size={17} />
+            ) : (
+              <ScanText size={17} />
+            )}
             Index text in Homi
           </button>
         </section>
