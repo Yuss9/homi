@@ -27,7 +27,8 @@
     "db:studio": "drizzle-kit studio",
     "docker:up": "docker compose up -d --build",
     "docker:down": "docker compose down",
-    "notifications:process": "tsx scripts/process-reminders.ts"
+    "notifications:process": "tsx scripts/process-reminders.ts",
+    "push:keys": "node scripts/generate-vapid-keys.mjs"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.848.0",
