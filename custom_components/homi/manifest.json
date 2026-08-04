@@ -1,0 +1,12 @@
+{
+  "domain": "homi",
+  "name": "Homi",
+  "version": "1.0.0",
+  "documentation": "https://github.com/Yuss9/homi",
+  "issue_tracker": "https://github.com/Yuss9/homi/issues",
+  "config_flow": true,
+  "iot_class": "local_polling",
+  "integration_type": "hub",
+  "codeowners": ["@Yuss9"],
+  "loggers": ["custom_components.homi"]
+}
