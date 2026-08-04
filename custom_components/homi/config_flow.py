@@ -23,7 +23,10 @@ async def validate_input(hass: HomeAssistant, data: dict) -> dict:
         data[CONF_HOME_ID],
     )
     summary = await client.summary()
-    return {"title": summary["home"]["name"]}
+    return {
+        "title": summary["home"]["name"],
+        "home_id": summary["home"]["id"],
+    }
 
 
 class HomiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -34,18 +37,18 @@ class HomiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_user(self, user_input: dict | None = None) -> FlowResult:
         errors: dict[str, str] = {}
         if user_input is not None:
-            await self.async_set_unique_id(
-                f"{user_input[CONF_URL].rstrip('/')}:{user_input[CONF_HOME_ID]}"
-            )
-            self._abort_if_unique_id_configured()
             try:
                 info = await validate_input(self.hass, user_input)
             except HomiApiError as error:
                 message = str(error).lower()
                 errors["base"] = (
-                    "invalid_auth" if "401" in message or "403" in message else "cannot_connect"
+                    "invalid_auth"
+                    if "401" in message or "403" in message
+                    else "cannot_connect"
                 )
             else:
+                await self.async_set_unique_id(str(info["home_id"]))
+                self._abort_if_unique_id_configured()
                 return self.async_create_entry(title=info["title"], data=user_input)
 
         schema = vol.Schema(
@@ -55,4 +58,6 @@ class HomiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 vol.Required(CONF_HOME_ID): str,
             }
         )
-        return self.async_show_form(step_id="user", data_schema=schema, errors=errors)
+        return self.async_show_form(
+            step_id="user", data_schema=schema, errors=errors
+        )
