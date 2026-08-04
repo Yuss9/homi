@@ -1,4 +1,7 @@
 import { expect, test } from "@playwright/test";
+
+test.use({ storageState: { cookies: [], origins: [] } });
+
 test("landing page is accessible and responsive", async ({ page, isMobile }) => {
   await page.goto("/");
   await expect(page.getByRole("heading", { name: "Your home, remembered." })).toBeVisible();

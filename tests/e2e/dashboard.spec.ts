@@ -1,10 +1,7 @@
 import { expect, test } from "@playwright/test";
 
 test("dashboard shows live counts and calculated home health", async ({ page }) => {
-  await page.goto("/sign-in");
-  await page.getByLabel("Email address").fill("alex@homi.local");
-  await page.getByLabel("Password").fill("HomiDemo!2026");
-  await page.getByRole("button", { name: /^Sign in/ }).click();
+  await page.goto("/dashboard");
   await expect(page).toHaveURL(/\/dashboard$/);
 
   const suffix = crypto.randomUUID().slice(0, 8);

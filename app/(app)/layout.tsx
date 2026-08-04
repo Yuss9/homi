@@ -5,6 +5,7 @@ import {
   selectedHomeCookie,
 } from "@/src/features/homes/selection";
 import { requireVerifiedPageUser } from "@/src/server/authorization/page";
+import { profileAvatarUrl } from "@/src/server/profile/avatar";
 import { listHomes } from "@/src/server/services/homes";
 
 export const dynamic = "force-dynamic";
@@ -24,7 +25,11 @@ export default async function ProtectedLayout({
 
   return (
     <AppShell
-      user={{ name: session.user.name, email: session.user.email }}
+      user={{
+        name: session.user.name,
+        email: session.user.email,
+        avatarUrl: profileAvatarUrl(session.user.id, session.user.image),
+      }}
       homes={homes}
       selectedHomeId={selectedHomeId}
     >

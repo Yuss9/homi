@@ -1,15 +1,8 @@
 import { expect, test } from "@playwright/test";
 
-async function signIn(page: import("@playwright/test").Page) {
-  await page.goto("/sign-in");
-  await page.getByLabel("Email address").fill("alex@homi.local");
-  await page.getByLabel("Password").fill("HomiDemo!2026");
-  await page.getByRole("button", { name: /^Sign in/ }).click();
-  await expect(page).toHaveURL(/\/dashboard$/);
-}
-
 test("rejects cross-home resource associations", async ({ page }) => {
-  await signIn(page);
+  await page.goto("/dashboard");
+  await expect(page).toHaveURL(/\/dashboard$/);
   const suffix = crypto.randomUUID().slice(0, 8);
 
   const firstHomeResponse = await page.request.post("/api/homes", {
@@ -94,7 +87,8 @@ test("rejects cross-home resource associations", async ({ page }) => {
 });
 
 test("global home switcher persists and drives the dashboard", async ({ page }) => {
-  await signIn(page);
+  await page.goto("/dashboard");
+  await expect(page).toHaveURL(/\/dashboard$/);
   const suffix = crypto.randomUUID().slice(0, 8);
   const homeName = `Selected Home ${suffix}`;
   const response = await page.request.post("/api/homes", {

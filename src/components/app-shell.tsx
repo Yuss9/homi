@@ -16,6 +16,7 @@ import {
   Wrench,
 } from "lucide-react";
 import { Brand } from "@/src/components/brand";
+import { UserAvatar } from "@/src/components/user-avatar";
 import type { HomeHealth } from "@/src/features/dashboard/health";
 import type { SelectableHome } from "@/src/features/homes/selection";
 import { authClient } from "@/src/lib/auth-client";
@@ -59,17 +60,11 @@ export function AppShell({
   selectedHomeId,
 }: {
   children: ReactNode;
-  user: { name: string; email: string };
+  user: { name: string; email: string; avatarUrl?: string | null };
   homes: SelectableHome[];
   selectedHomeId: string;
 }) {
   const pathname = usePathname();
-  const initials = user.name
-    .split(/\s+/)
-    .slice(0, 2)
-    .map((part) => part[0])
-    .join("")
-    .toUpperCase();
   const selectedHome = homes.find((home) => home.id === selectedHomeId);
 
   async function selectHome(homeId: string) {
@@ -120,7 +115,7 @@ export function AppShell({
             <NavLink href="/settings" label="Settings" icon={Settings} />
           </nav>
           <div className="app-user">
-            <span>{initials}</span>
+            <UserAvatar name={user.name} avatarUrl={user.avatarUrl} />
             <div>
               <strong>{user.name}</strong>
               <small>{user.email}</small>

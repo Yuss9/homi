@@ -1,17 +1,10 @@
-import { expect, test, type Page } from "@playwright/test";
-
-async function signIn(page: Page) {
-  await page.goto("/sign-in");
-  await page.getByLabel("Email address").fill("alex@homi.local");
-  await page.getByLabel("Password").fill("HomiDemo!2026");
-  await page.getByRole("button", { name: /^Sign in/ }).click();
-  await expect(page).toHaveURL(/\/dashboard$/);
-}
+import { expect, test } from "@playwright/test";
 
 test("resources can be created, edited, enriched, and archived", async ({
   page,
 }) => {
-  await signIn(page);
+  await page.goto("/dashboard");
+  await expect(page).toHaveURL(/\/dashboard$/);
   const suffix = crypto.randomUUID().slice(0, 8);
 
   const homeResponse = await page.request.post("/api/homes", {
