@@ -98,9 +98,9 @@ test("high value household tools share one tenant-safe workflow", async ({
   const searchPayload = (await searchResponse.json()) as {
     results: Array<{ title: string }>;
   };
-  expect(searchPayload.results.some((result) => result.title.includes(suffix))).toBe(
-    true,
-  );
+  expect(
+    searchPayload.results.some((result) => result.title.includes(suffix)),
+  ).toBe(true);
 
   const calendarResponse = await page.request.get(
     `/api/calendar?homeId=${home.id}&start=${new Date(
@@ -131,22 +131,37 @@ test("high value household tools share one tenant-safe workflow", async ({
     page.getByRole("heading", { name: "QR & NFC shortcut" }),
   ).toBeVisible();
   await expect(
-    page.getByRole("img", { name: `QR code that opens Rainwater pump ${suffix}` }),
+    page.getByRole("img", {
+      name: `QR code that opens Rainwater pump ${suffix}`,
+    }),
   ).toBeVisible();
 
-  await page.keyboard.press("Control+K");
+  await page.evaluate(() => {
+    window.dispatchEvent(
+      new KeyboardEvent("keydown", {
+        key: "k",
+        code: "KeyK",
+        ctrlKey: true,
+        bubbles: true,
+      }),
+    );
+  });
   const searchInput = page.getByLabel(
     "Search homes, assets, tasks and documents",
   );
   await expect(searchInput).toBeVisible();
   await searchInput.fill(suffix);
   await expect(
-    page.getByRole("option", { name: new RegExp(`Rainwater pump ${suffix}`) }),
+    page.getByRole("option", {
+      name: new RegExp(`Rainwater pump ${suffix}`),
+    }),
   ).toBeVisible();
   await page.keyboard.press("Escape");
 
   await page.goto("/maintenance/templates");
-  await expect(page.getByRole("heading", { name: "Maintenance library" })).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Maintenance library" }),
+  ).toBeVisible();
   await expect(page.getByRole("heading", { name: templateTitle })).toBeVisible();
 
   await page.goto("/calendar");
@@ -154,7 +169,9 @@ test("high value household tools share one tenant-safe workflow", async ({
   await expect(page.getByText(templateTitle)).toBeVisible();
 
   await page.goto("/costs");
-  await expect(page.getByRole("heading", { name: "Cost insights" })).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Cost insights" }),
+  ).toBeVisible();
   await expect(page.getByText("CHF").first()).toBeVisible();
   await expect(page.getByText(templateTitle)).toBeVisible();
   await expect(page.getByText(repairTitle)).toBeVisible();
