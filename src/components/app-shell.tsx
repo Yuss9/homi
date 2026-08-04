@@ -4,7 +4,6 @@ import { usePathname } from "next/navigation";
 import {
   Bell,
   CalendarDays,
-  ChevronDown,
   FileText,
   House,
   LayoutDashboard,
@@ -16,6 +15,7 @@ import {
 } from "lucide-react";
 import { Brand } from "@/src/components/brand";
 import { authClient } from "@/src/lib/auth-client";
+import type { SelectableHome } from "@/src/features/homes/selection";
 import type { ReactNode } from "react";
 
 const navigation = [
@@ -52,9 +52,13 @@ function NavLink({
 export function AppShell({
   children,
   user,
+  homes,
+  selectedHomeId,
 }: {
   children: ReactNode;
   user: { name: string; email: string };
+  homes: SelectableHome[];
+  selectedHomeId: string;
 }) {
   const pathname = usePathname();
   const initials = user.name
@@ -63,22 +67,44 @@ export function AppShell({
     .map((part) => part[0])
     .join("")
     .toUpperCase();
+  const selectedHome = homes.find((home) => home.id === selectedHomeId);
+
+  async function selectHome(homeId: string) {
+    const response = await fetch("/api/homes/selected", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ homeId }),
+    });
+    if (response.ok) window.location.reload();
+  }
+
   return (
     <div className="app-body">
       <aside className="app-sidebar">
         <Link href="/dashboard">
           <Brand connected />
         </Link>
-        <button className="home-switcher" type="button">
+        <label className="home-switcher">
           <span>
             <House size={17} />
           </span>
           <span>
-            <strong>My home</strong>
-            <small>Personal journal</small>
+            <strong>{selectedHome?.name ?? "No home yet"}</strong>
+            <small>{selectedHome?.city || selectedHome?.type || "Personal journal"}</small>
           </span>
-          <ChevronDown size={14} />
-        </button>
+          <select
+            aria-label="Global selected home"
+            value={selectedHomeId}
+            disabled={!homes.length}
+            onChange={(event) => void selectHome(event.target.value)}
+          >
+            {homes.map((home) => (
+              <option key={home.id} value={home.id}>
+                {home.name}
+              </option>
+            ))}
+          </select>
+        </label>
         <nav className="app-nav" aria-label="Workspace">
           {navigation.map(([href, label, Icon]) => (
             <NavLink key={href} href={href} label={label} icon={Icon} />
