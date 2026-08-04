@@ -9,12 +9,10 @@ import { getEnv } from "@/src/server/env";
 import { errorResponse, requestId } from "@/src/server/http";
 import { sanitizeFilename } from "@/src/lib/utils";
 import { enforceRateLimit } from "@/src/server/rate-limit";
+import { assertUploadIsClean } from "@/src/server/security/virus-scanner";
 import { replaceDocumentTags } from "@/src/server/services/document-tags";
 import { getStorage } from "@/src/server/storage";
-import {
-  noOpVirusScanner,
-  validateUpload,
-} from "@/src/server/storage/validation";
+import { validateUpload } from "@/src/server/storage/validation";
 
 const emptyToUndefined = (value: unknown) => (value === "" ? undefined : value);
 const optionalText = (max: number) =>
@@ -87,9 +85,7 @@ export async function POST(request: Request) {
       getEnv().MAX_UPLOAD_BYTES,
       file.name,
     );
-    const scan = await noOpVirusScanner.scan(bytes);
-    if (!scan.clean)
-      throw new Error("The file did not pass the security scan.");
+    await assertUploadIsClean(bytes);
     const storage = getStorage();
     const uploadedKey = await storage.put(bytes, validated.extension);
     storageKey = uploadedKey;
