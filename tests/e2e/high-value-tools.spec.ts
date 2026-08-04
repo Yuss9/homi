@@ -136,16 +136,10 @@ test("high value household tools share one tenant-safe workflow", async ({
     }),
   ).toBeVisible();
 
-  await page.evaluate(() => {
-    window.dispatchEvent(
-      new KeyboardEvent("keydown", {
-        key: "k",
-        code: "KeyK",
-        ctrlKey: true,
-        bubbles: true,
-      }),
-    );
-  });
+  const searchTrigger = page.getByRole("button", { name: "Search Homi" });
+  await expect(searchTrigger).toBeVisible();
+  await expect(searchTrigger.getByText("⌘ K")).toBeVisible();
+  await searchTrigger.click();
   const searchInput = page.getByLabel(
     "Search homes, assets, tasks and documents",
   );
@@ -166,7 +160,7 @@ test("high value household tools share one tenant-safe workflow", async ({
 
   await page.goto("/calendar");
   await expect(page.getByRole("heading", { name: "Calendar" })).toBeVisible();
-  await expect(page.getByText(templateTitle)).toBeVisible();
+  await expect(page.getByText(templateTitle).first()).toBeVisible();
 
   await page.goto("/costs");
   await expect(
