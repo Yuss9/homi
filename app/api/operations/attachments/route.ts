@@ -1,4 +1,4 @@
-import { and, desc, eq } from "drizzle-orm";
+import { and, desc, eq, inArray } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "@/db";
 import {
@@ -52,7 +52,10 @@ type TargetType = z.infer<typeof targetType>;
 async function resolveTarget(homeId: string, type: TargetType, targetId: string) {
   if (type === "MAINTENANCE_RECORD") {
     const [record] = await db
-      .select({ id: maintenanceRecords.id, homeId: maintenanceRecords.homeId, assetId: maintenanceRecords.assetId })
+      .select({
+        homeId: maintenanceRecords.homeId,
+        assetId: maintenanceRecords.assetId,
+      })
       .from(maintenanceRecords)
       .where(eq(maintenanceRecords.id, targetId))
       .limit(1);
@@ -62,7 +65,7 @@ async function resolveTarget(homeId: string, type: TargetType, targetId: string)
   }
   if (type === "REPAIR") {
     const [repair] = await db
-      .select({ id: repairRecords.id, homeId: repairRecords.homeId, assetId: repairRecords.assetId })
+      .select({ homeId: repairRecords.homeId, assetId: repairRecords.assetId })
       .from(repairRecords)
       .where(eq(repairRecords.id, targetId))
       .limit(1);
@@ -71,7 +74,7 @@ async function resolveTarget(homeId: string, type: TargetType, targetId: string)
     return { assetId: repair.assetId };
   }
   const [project] = await db
-    .select({ id: renovationProjects.id, homeId: renovationProjects.homeId })
+    .select({ id: renovationProjects.id })
     .from(renovationProjects)
     .where(
       and(
@@ -85,30 +88,16 @@ async function resolveTarget(homeId: string, type: TargetType, targetId: string)
   return { assetId: null };
 }
 
-async function linkDocument(type: TargetType, targetId: string, documentId: string) {
-  if (type === "MAINTENANCE_RECORD") {
-    await db.insert(maintenanceRecordDocuments).values({
-      maintenanceRecordId: targetId,
-      documentId,
-    });
-  } else if (type === "REPAIR") {
-    await db.insert(repairDocuments).values({ repairId: targetId, documentId });
-  } else {
-    await db.insert(renovationDocuments).values({ projectId: targetId, documentId });
-  }
-}
-
 export async function GET(request: Request) {
   const id = requestId(request);
   try {
-    const url = new URL(request.url);
     const input = z
       .object({
         homeId: z.string().uuid(),
         targetType,
         targetId: z.string().uuid(),
       })
-      .parse(Object.fromEntries(url.searchParams.entries()));
+      .parse(Object.fromEntries(new URL(request.url).searchParams.entries()));
     await requireHomeRole(input.homeId, ["OWNER", "ADMIN", "MEMBER", "VIEWER"]);
     await resolveTarget(input.homeId, input.targetType, input.targetId);
 
@@ -144,29 +133,17 @@ export async function GET(request: Request) {
       })
       .from(documents)
       .innerJoin(storedFiles, eq(storedFiles.id, documents.fileId))
-      .where(and(eq(documents.homeId, input.homeId), sqlIn(documents.id, ids)))
+      .where(
+        and(
+          eq(documents.homeId, input.homeId),
+          inArray(documents.id, ids),
+        ),
+      )
       .orderBy(desc(documents.createdAt));
     return Response.json({ attachments, requestId: id });
   } catch (error) {
     return errorResponse(error, id);
   }
-}
-
-function sqlIn<T>(column: T, values: string[]) {
-  return values.length
-    ? (awaitImportInArray(column, values) as never)
-    : eq(documents.id, "00000000-0000-0000-0000-000000000000");
-}
-
-function awaitImportInArray<T>(column: T, values: string[]) {
-  // Kept as a tiny indirection so this route remains easy to test with a mocked DB.
-  const { inArray } = requireDrizzle();
-  return inArray(column, values);
-}
-
-function requireDrizzle() {
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  return require("drizzle-orm") as typeof import("drizzle-orm");
 }
 
 export async function POST(request: Request) {
