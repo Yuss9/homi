@@ -4,6 +4,7 @@ import { Pool } from "pg";
 import * as connectedPlatformSchema from "./connected-platform-schema";
 import * as coreSchema from "./schema";
 import * as highValueSchema from "./high-value-schema";
+import * as maintenanceOperationsSchema from "./maintenance-operations-schema";
 
 const databaseUrl =
   process.env.DATABASE_URL ?? "postgresql://homi:homi@127.0.0.1:5432/homi";
@@ -30,6 +31,7 @@ export const db = drizzle(pool, {
     ...coreSchema,
     ...highValueSchema,
     ...connectedPlatformSchema,
+    ...maintenanceOperationsSchema,
   },
 });
 
