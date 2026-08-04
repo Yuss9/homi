@@ -1,0 +1,38 @@
+{
+  "title": "Homi",
+  "config": {
+    "step": {
+      "user": {
+        "title": "Connecter Homi",
+        "description": "Créez une clé API limitée dans les réglages Homi. Permissions recommandées : home:read, assets:read, maintenance:write et repairs:write.",
+        "data": {
+          "url": "URL Homi",
+          "api_key": "Clé API",
+          "home_id": "ID de la maison"
+        },
+        "data_description": {
+          "url": "L’URL publique ou locale de votre instance Homi.",
+          "api_key": "Une clé API Homi limitée et révocable.",
+          "home_id": "L’UUID de la maison Homi à exposer dans Home Assistant."
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Connexion à Homi impossible.",
+      "invalid_auth": "La clé API est invalide ou ne possède pas les permissions nécessaires."
+    },
+    "abort": {
+      "already_configured": "Cette maison Homi est déjà configurée."
+    }
+  },
+  "entity": {
+    "sensor": {
+      "home_health": { "name": "Santé de la maison" },
+      "overdue_maintenance": { "name": "Maintenances en retard" },
+      "open_repairs": { "name": "Réparations ouvertes" },
+      "expiring_warranties": { "name": "Garanties proches de l’expiration" },
+      "expiring_documents": { "name": "Documents proches de l’expiration" },
+      "monthly_costs": { "name": "Coûts mensuels" }
+    }
+  }
+}
