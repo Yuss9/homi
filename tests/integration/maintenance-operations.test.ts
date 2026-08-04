@@ -54,6 +54,11 @@ describe.runIf(runIntegrationTests)("maintenance operations schema", () => {
          values ($1, 'New boiler', 'Heating', $2) returning id`,
         [homeId, ownerId],
       );
+      const independentAsset = await client.query<{ id: string }>(
+        `insert into assets (home_id, name, category, created_by)
+         values ($1, 'Independent heater', 'Heating', $2) returning id`,
+        [homeId, ownerId],
+      );
       const task = await client.query<{ id: string }>(
         `insert into maintenance_tasks
           (home_id, asset_id, title, frequency_type, frequency_interval, next_due_at, created_by)
@@ -127,7 +132,7 @@ describe.runIf(runIntegrationTests)("maintenance operations schema", () => {
           `insert into asset_replacement_links
             (home_id, predecessor_asset_id, successor_asset_id, replaced_at, created_by)
            values ($1, $2, $2, '2026-08-04', $3)`,
-          [homeId, secondAsset.rows[0]!.id, ownerId],
+          [homeId, independentAsset.rows[0]!.id, ownerId],
         );
       } catch (error) {
         constraint = (error as { code?: string }).code;
