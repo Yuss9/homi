@@ -3,6 +3,13 @@
 Notable changes to Homi are recorded here. This file is maintained by Release
 Please from Conventional Commit pull request titles.
 
+## [1.5.0](https://github.com/Yuss9/homi/compare/v1.4.0...v1.5.0) (2026-08-04)
+
+
+### Features
+
+* add high value household tools ([#23](https://github.com/Yuss9/homi/issues/23)) ([8d98f1e](https://github.com/Yuss9/homi/commit/8d98f1ef10073d4ee57bf5fbca13c78c9d6f54c0))
+
 ## [1.4.0](https://github.com/Yuss9/homi/compare/v1.3.0...v1.4.0) (2026-08-04)
 
 
