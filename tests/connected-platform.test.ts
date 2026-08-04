@@ -4,17 +4,20 @@ import {
   constantTimeTokenMatch,
   createOpaqueToken,
   hashToken,
-} from "@/src/server/integrations/tokens";
-import { validateWebhookUrl } from "@/src/server/integrations/webhooks";
-
+  validateWebhookUrl,
+} from "@/src/features/integrations/security";
 
 describe("connected platform primitives", () => {
   it("creates opaque API tokens and only matches their hash", () => {
     const generated = createOpaqueToken("api");
-    expect(generated.token).toMatch(/^homi_api_[a-f0-9]{8}_[A-Za-z0-9_-]+$/u);
+    expect(generated.token).toMatch(
+      /^homi_api_[a-f0-9]{8}_[A-Za-z0-9_-]+$/u,
+    );
     expect(generated.hash).toBe(hashToken(generated.token));
     expect(constantTimeTokenMatch(generated.token, generated.hash)).toBe(true);
-    expect(constantTimeTokenMatch(`${generated.token}x`, generated.hash)).toBe(false);
+    expect(constantTimeTokenMatch(`${generated.token}x`, generated.hash)).toBe(
+      false,
+    );
   });
 
   it("creates distinct private calendar tokens", () => {
