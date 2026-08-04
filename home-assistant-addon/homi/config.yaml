@@ -1,0 +1,39 @@
+name: Homi
+version: "1.0.0"
+slug: homi
+url: https://github.com/Yuss9/homi
+description: Private home maintenance journal with embedded PostgreSQL, local storage and ClamAV.
+arch:
+  - amd64
+  - aarch64
+startup: application
+boot: auto
+init: false
+webui: http://[HOST]:[PORT:3000]
+ports:
+  3000/tcp: 3000
+ports_description:
+  3000/tcp: Homi web application
+map:
+  - addon_config:rw
+  - ssl:ro
+backup: cold
+options:
+  app_url: http://homeassistant.local:3000
+  timezone: Europe/Zurich
+  smtp_host: ""
+  smtp_port: 587
+  smtp_user: ""
+  smtp_password: ""
+  smtp_from: Homi <no-reply@homi.local>
+  log_level: info
+schema:
+  app_url: url
+  timezone: str
+  smtp_host: str?
+  smtp_port: port
+  smtp_user: str?
+  smtp_password: password?
+  smtp_from: str
+  log_level: list(trace|debug|info|warn|error|fatal)
+image: ghcr.io/yuss9/homi-addon-{arch}

@@ -3,6 +3,7 @@
 import { useEffect, useState, type FormEvent } from "react";
 import Link from "next/link";
 import { Download, Save, ShieldCheck } from "lucide-react";
+import { ConnectedPlatformSettings } from "@/src/components/connected-platform-settings";
 import { ProfileSettings } from "@/src/components/profile-settings";
 import { PushNotificationSettings } from "@/src/components/push-notification-settings";
 
@@ -55,8 +56,8 @@ export function PreferenceWorkspace() {
           <small>Personal controls</small>
           <h1>Settings</h1>
           <p>
-            Your household identity, notification channels, privacy, timezone,
-            and account security.
+            Your identity, notifications, connected apps, mobile widgets,
+            language, privacy and account security.
           </p>
         </div>
       </div>
@@ -65,7 +66,7 @@ export function PreferenceWorkspace() {
           {message}
         </p>
       )}
-      <div className="dash-grid" style={{ marginTop: 32 }}>
+      <div className="dash-grid connected-settings-grid" style={{ marginTop: 32 }}>
         <ProfileSettings />
         <form className="dash-card auth-form" onSubmit={save}>
           <div className="dash-card-head">
@@ -97,9 +98,7 @@ export function PreferenceWorkspace() {
             Weekly summary
           </label>
           <div className="field">
-            <label htmlFor="maintenance-days">
-              Maintenance notice (days)
-            </label>
+            <label htmlFor="maintenance-days">Maintenance notice (days)</label>
             <input
               id="maintenance-days"
               name="maintenanceReminderDays"
@@ -169,6 +168,7 @@ export function PreferenceWorkspace() {
             Security & sessions
           </Link>
         </section>
+        <ConnectedPlatformSettings />
       </div>
     </main>
   );

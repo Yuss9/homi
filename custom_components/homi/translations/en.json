@@ -1,0 +1,38 @@
+{
+  "title": "Homi",
+  "config": {
+    "step": {
+      "user": {
+        "title": "Connect Homi",
+        "description": "Create a scoped API key in Homi Settings. Recommended scopes: home:read, assets:read, maintenance:write and repairs:write.",
+        "data": {
+          "url": "Homi URL",
+          "api_key": "API key",
+          "home_id": "Home ID"
+        },
+        "data_description": {
+          "url": "The public or local base URL of your Homi instance.",
+          "api_key": "A scoped, revocable Homi API key.",
+          "home_id": "The UUID of the Homi home to expose in Home Assistant."
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Could not connect to Homi.",
+      "invalid_auth": "The API key is invalid or lacks the required scope."
+    },
+    "abort": {
+      "already_configured": "This Homi home is already configured."
+    }
+  },
+  "entity": {
+    "sensor": {
+      "home_health": { "name": "Home Health" },
+      "overdue_maintenance": { "name": "Overdue maintenance" },
+      "open_repairs": { "name": "Open repairs" },
+      "expiring_warranties": { "name": "Warranties expiring soon" },
+      "expiring_documents": { "name": "Documents expiring soon" },
+      "monthly_costs": { "name": "Monthly costs" }
+    }
+  }
+}

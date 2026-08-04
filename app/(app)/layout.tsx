@@ -6,6 +6,7 @@ import {
 } from "@/src/features/homes/selection";
 import { requireVerifiedPageUser } from "@/src/server/authorization/page";
 import { profileAvatarUrl } from "@/src/server/profile/avatar";
+import { getExperiencePreferences } from "@/src/server/services/experience";
 import { listHomes } from "@/src/server/services/homes";
 
 export const dynamic = "force-dynamic";
@@ -17,7 +18,10 @@ export default async function ProtectedLayout({
   children: React.ReactNode;
 }) {
   const session = await requireVerifiedPageUser();
-  const homes = await listHomes(session.user.id);
+  const [homes, experience] = await Promise.all([
+    listHomes(session.user.id),
+    getExperiencePreferences(session.user.id),
+  ]);
   const selectedHomeId = resolveSelectedHomeId(
     homes,
     (await cookies()).get(selectedHomeCookie)?.value,
@@ -32,6 +36,7 @@ export default async function ProtectedLayout({
       }}
       homes={homes}
       selectedHomeId={selectedHomeId}
+      locale={experience.locale}
     >
       {children}
     </AppShell>

@@ -130,6 +130,20 @@ services:
       sleep 3600;
       done'
 
+  mqtt-bridge:
+    profiles: [mqtt]
+    build: ./integrations/mqtt-bridge
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      HOMI_URL: http://web:3000
+      HOMI_MQTT_STATE_PATH: /data/state.json
+    depends_on:
+      web: { condition: service_healthy }
+    volumes:
+      - mqtt_bridge_data:/data
+    networks: [homi_internal]
+
 networks:
   homi_internal:
     driver: bridge
@@ -140,3 +154,4 @@ volumes:
   redis_data:
   clamav_data:
   uploads_data:
+  mqtt_bridge_data:

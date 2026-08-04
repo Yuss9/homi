@@ -1,0 +1,38 @@
+{
+  "title": "Homi",
+  "config": {
+    "step": {
+      "user": {
+        "title": "Homi verbinden",
+        "description": "Erstelle in den Homi-Einstellungen einen eingeschränkten API-Schlüssel. Empfohlene Berechtigungen: home:read, assets:read, maintenance:write und repairs:write.",
+        "data": {
+          "url": "Homi-URL",
+          "api_key": "API-Schlüssel",
+          "home_id": "Haus-ID"
+        },
+        "data_description": {
+          "url": "Die öffentliche oder lokale Basis-URL deiner Homi-Instanz.",
+          "api_key": "Ein eingeschränkter und widerrufbarer Homi-API-Schlüssel.",
+          "home_id": "Die UUID des Homi-Hauses für Home Assistant."
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Verbindung zu Homi nicht möglich.",
+      "invalid_auth": "Der API-Schlüssel ist ungültig oder besitzt nicht die erforderlichen Berechtigungen."
+    },
+    "abort": {
+      "already_configured": "Dieses Homi-Haus ist bereits konfiguriert."
+    }
+  },
+  "entity": {
+    "sensor": {
+      "home_health": { "name": "Hauszustand" },
+      "overdue_maintenance": { "name": "Überfällige Wartungen" },
+      "open_repairs": { "name": "Offene Reparaturen" },
+      "expiring_warranties": { "name": "Bald ablaufende Garantien" },
+      "expiring_documents": { "name": "Bald ablaufende Dokumente" },
+      "monthly_costs": { "name": "Monatliche Kosten" }
+    }
+  }
+}
