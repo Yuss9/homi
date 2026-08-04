@@ -1,6 +1,6 @@
-import { expect, test } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
 
-async function signIn(page: Parameters<typeof test>[0]["page"]) {
+async function signIn(page: Page) {
   await page.goto("/sign-in");
   await page.getByLabel("Email address").fill("alex@homi.local");
   await page.getByLabel("Password").fill("HomiDemo!2026");
@@ -34,13 +34,22 @@ test("resources can be created, edited, enriched, and archived", async ({
     data: { name: `Updated Home ${suffix}`, constructionYear: 2019 },
   });
   expect(homeUpdate.status()).toBe(200);
-  expect(((await homeUpdate.json()) as { home: { constructionYear: number } }).home.constructionYear).toBe(2019);
+  expect(
+    ((await homeUpdate.json()) as { home: { constructionYear: number } }).home
+      .constructionYear,
+  ).toBe(2019);
 
   const roomResponse = await page.request.post("/api/rooms", {
-    data: { homeId, name: `Utility ${suffix}`, floor: "Ground", icon: "Tools" },
+    data: {
+      homeId,
+      name: `Utility ${suffix}`,
+      floor: "Ground",
+      icon: "Tools",
+    },
   });
   expect(roomResponse.status()).toBe(201);
-  const roomId = ((await roomResponse.json()) as { room: { id: string } }).room.id;
+  const roomId = ((await roomResponse.json()) as { room: { id: string } }).room
+    .id;
 
   const roomUpdate = await page.request.patch(`/api/rooms/${roomId}`, {
     data: { name: `Workshop ${suffix}`, floor: "Basement" },
@@ -69,7 +78,8 @@ test("resources can be created, edited, enriched, and archived", async ({
     },
   });
   expect(assetResponse.status()).toBe(201);
-  const assetId = ((await assetResponse.json()) as { asset: { id: string } }).asset.id;
+  const assetId = ((await assetResponse.json()) as { asset: { id: string } })
+    .asset.id;
 
   const assetUpdate = await page.request.patch(`/api/assets/${assetId}`, {
     data: {
@@ -81,7 +91,11 @@ test("resources can be created, edited, enriched, and archived", async ({
   });
   expect(assetUpdate.status()).toBe(200);
   const updatedAsset = (await assetUpdate.json()) as {
-    asset: { retailer: string; purchasePrice: string; expectedLifetimeYears: number };
+    asset: {
+      retailer: string;
+      purchasePrice: string;
+      expectedLifetimeYears: number;
+    };
   };
   expect(updatedAsset.asset.retailer).toBe("Updated Retailer AG");
   expect(updatedAsset.asset.purchasePrice).toBe("4100.00");
@@ -101,7 +115,8 @@ test("resources can be created, edited, enriched, and archived", async ({
     },
   });
   expect(taskResponse.status()).toBe(201);
-  const taskId = ((await taskResponse.json()) as { task: { id: string } }).task.id;
+  const taskId = ((await taskResponse.json()) as { task: { id: string } }).task
+    .id;
 
   const taskUpdate = await page.request.patch(`/api/tasks/${taskId}`, {
     data: { priority: "CRITICAL", estimatedDurationMinutes: 120 },
@@ -124,7 +139,8 @@ test("resources can be created, edited, enriched, and archived", async ({
     },
   });
   expect(repairResponse.status()).toBe(201);
-  const repairId = ((await repairResponse.json()) as { repair: { id: string } }).repair.id;
+  const repairId = ((await repairResponse.json()) as { repair: { id: string } })
+    .repair.id;
 
   const repairUpdate = await page.request.patch(`/api/repairs/${repairId}`, {
     data: { provider: "Updated Heating Care GmbH", cost: "225.00" },
@@ -144,36 +160,53 @@ test("resources can be created, edited, enriched, and archived", async ({
       file: {
         name: `warranty-${suffix}.pdf`,
         mimeType: "application/pdf",
-        buffer: Buffer.from("%PDF-1.4\n1 0 obj<</Type/Catalog>>endobj\n%%EOF"),
+        buffer: Buffer.from(
+          "%PDF-1.4\n1 0 obj<</Type/Catalog>>endobj\n%%EOF",
+        ),
       },
     },
   });
   expect(uploadResponse.status()).toBe(201);
-  const documentId = ((await uploadResponse.json()) as { document: { id: string } }).document.id;
+  const documentId = (
+    (await uploadResponse.json()) as { document: { id: string } }
+  ).document.id;
 
-  const documentUpdate = await page.request.patch(`/api/documents/${documentId}`, {
-    data: {
-      title: `Extended warranty ${suffix}`,
-      documentDate: "2026-01-21",
-      expiryDate: "2029-01-21",
+  const documentUpdate = await page.request.patch(
+    `/api/documents/${documentId}`,
+    {
+      data: {
+        title: `Extended warranty ${suffix}`,
+        documentDate: "2026-01-21",
+        expiryDate: "2029-01-21",
+      },
     },
-  });
+  );
   expect(documentUpdate.status()).toBe(200);
 
-  const documentsBeforeArchive = await page.request.get(`/api/documents?homeId=${homeId}`);
+  const documentsBeforeArchive = await page.request.get(
+    `/api/documents?homeId=${homeId}`,
+  );
   expect(documentsBeforeArchive.status()).toBe(200);
   const documentRows = (await documentsBeforeArchive.json()) as {
     documents: Array<{ id: string; documentDate: string; expiryDate: string }>;
   };
-  expect(documentRows.documents.find((document) => document.id === documentId)).toMatchObject({
+  expect(
+    documentRows.documents.find((document) => document.id === documentId),
+  ).toMatchObject({
     documentDate: "2026-01-21",
     expiryDate: "2029-01-21",
   });
 
   expect((await page.request.delete(`/api/tasks/${taskId}`)).status()).toBe(200);
-  expect((await page.request.delete(`/api/repairs/${repairId}`)).status()).toBe(200);
-  expect((await page.request.delete(`/api/documents/${documentId}`)).status()).toBe(200);
-  expect((await page.request.delete(`/api/assets/${assetId}`)).status()).toBe(200);
+  expect((await page.request.delete(`/api/repairs/${repairId}`)).status()).toBe(
+    200,
+  );
+  expect(
+    (await page.request.delete(`/api/documents/${documentId}`)).status(),
+  ).toBe(200);
+  expect((await page.request.delete(`/api/assets/${assetId}`)).status()).toBe(
+    200,
+  );
   expect((await page.request.delete(`/api/rooms/${roomId}`)).status()).toBe(200);
 
   const [tasks, repairs, documents, assets, rooms] = await Promise.all([
@@ -183,14 +216,36 @@ test("resources can be created, edited, enriched, and archived", async ({
     page.request.get(`/api/assets?homeId=${homeId}`),
     page.request.get(`/api/rooms?homeId=${homeId}`),
   ]);
-  expect(((await tasks.json()) as { tasks: Array<{ id: string }> }).tasks.some((item) => item.id === taskId)).toBe(false);
-  expect(((await repairs.json()) as { repairs: Array<{ id: string }> }).repairs.some((item) => item.id === repairId)).toBe(false);
-  expect(((await documents.json()) as { documents: Array<{ id: string }> }).documents.some((item) => item.id === documentId)).toBe(false);
-  expect(((await assets.json()) as { assets: Array<{ id: string }> }).assets.some((item) => item.id === assetId)).toBe(false);
-  expect(((await rooms.json()) as { rooms: Array<{ id: string }> }).rooms.some((item) => item.id === roomId)).toBe(false);
+  expect(
+    ((await tasks.json()) as { tasks: Array<{ id: string }> }).tasks.some(
+      (item) => item.id === taskId,
+    ),
+  ).toBe(false);
+  expect(
+    ((await repairs.json()) as { repairs: Array<{ id: string }> }).repairs.some(
+      (item) => item.id === repairId,
+    ),
+  ).toBe(false);
+  expect(
+    (
+      (await documents.json()) as { documents: Array<{ id: string }> }
+    ).documents.some((item) => item.id === documentId),
+  ).toBe(false);
+  expect(
+    ((await assets.json()) as { assets: Array<{ id: string }> }).assets.some(
+      (item) => item.id === assetId,
+    ),
+  ).toBe(false);
+  expect(
+    ((await rooms.json()) as { rooms: Array<{ id: string }> }).rooms.some(
+      (item) => item.id === roomId,
+    ),
+  ).toBe(false);
 
   expect((await page.request.delete(`/api/homes/${homeId}`)).status()).toBe(200);
   const homesResponse = await page.request.get("/api/homes");
-  const homesPayload = (await homesResponse.json()) as { homes: Array<{ id: string }> };
+  const homesPayload = (await homesResponse.json()) as {
+    homes: Array<{ id: string }>;
+  };
   expect(homesPayload.homes.some((item) => item.id === homeId)).toBe(false);
 });
