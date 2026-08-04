@@ -1,3 +1,4 @@
+import { z } from "zod";
 import { db } from "@/db";
 import { documents, storedFiles } from "@/db/schema";
 import {
@@ -6,32 +7,55 @@ import {
 } from "@/src/server/authorization";
 import { getEnv } from "@/src/server/env";
 import { errorResponse, requestId } from "@/src/server/http";
+import { sanitizeFilename } from "@/src/lib/utils";
 import { enforceRateLimit } from "@/src/server/rate-limit";
+import { replaceDocumentTags } from "@/src/server/services/document-tags";
 import { getStorage } from "@/src/server/storage";
 import {
   noOpVirusScanner,
   validateUpload,
 } from "@/src/server/storage/validation";
-import { sanitizeFilename } from "@/src/lib/utils";
-import { replaceDocumentTags } from "@/src/server/services/document-tags";
-import { z } from "zod";
 
-const metadataSchema = z.object({
-  homeId: z.string().uuid(),
-  assetId: z.string().uuid().optional(),
-  type: z.enum([
-    "INVOICE",
-    "WARRANTY",
-    "MANUAL",
-    "CERTIFICATE",
-    "CONTRACT",
-    "PHOTO",
-    "OTHER",
-  ]),
-  title: z.string().trim().min(1).max(160),
-  description: z.string().trim().max(1000).optional(),
-  tags: z.string().max(500).optional(),
-});
+const emptyToUndefined = (value: unknown) => (value === "" ? undefined : value);
+const optionalText = (max: number) =>
+  z.preprocess(emptyToUndefined, z.string().trim().max(max).optional());
+const optionalDate = z.preprocess(
+  emptyToUndefined,
+  z.string().date().optional(),
+);
+
+const metadataSchema = z
+  .object({
+    homeId: z.string().uuid(),
+    assetId: z.preprocess(emptyToUndefined, z.string().uuid().optional()),
+    type: z.enum([
+      "INVOICE",
+      "WARRANTY",
+      "MANUAL",
+      "CERTIFICATE",
+      "CONTRACT",
+      "PHOTO",
+      "OTHER",
+    ]),
+    title: z.string().trim().min(1).max(160),
+    description: optionalText(1000),
+    documentDate: optionalDate,
+    expiryDate: optionalDate,
+    tags: optionalText(500),
+  })
+  .superRefine((input, context) => {
+    if (
+      input.documentDate &&
+      input.expiryDate &&
+      input.expiryDate < input.documentDate
+    ) {
+      context.addIssue({
+        code: "custom",
+        path: ["expiryDate"],
+        message: "Expiry date must be after the document date.",
+      });
+    }
+  });
 
 export async function POST(request: Request) {
   const id = requestId(request);
@@ -41,7 +65,9 @@ export async function POST(request: Request) {
     const file = form.get("file");
     if (!(file instanceof File)) throw new Error("A file is required.");
     const metadata = metadataSchema.parse(
-      Object.fromEntries([...form.entries()].filter(([key]) => key !== "file")),
+      Object.fromEntries(
+        [...form.entries()].filter(([key]) => key !== "file"),
+      ),
     );
     const { session } = await requireHomeRole(metadata.homeId, [
       "OWNER",
