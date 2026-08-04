@@ -10,6 +10,7 @@ import {
   repairRecords,
 } from "@/db/schema";
 import { AssetEditor } from "@/src/components/asset-editor";
+import { AssetShortcutCard } from "@/src/components/asset-shortcut-card";
 import { requireVerifiedPageUser } from "@/src/server/authorization/page";
 
 export const metadata = { title: "Asset details" };
@@ -80,44 +81,121 @@ export default async function Page({
 
       <div className="dash-grid" style={{ marginTop: 32 }}>
         <section className="dash-card">
-          <div className="dash-card-head"><h2>Details</h2><Package size={17} /></div>
+          <div className="dash-card-head">
+            <h2>Details</h2>
+            <Package size={17} />
+          </div>
           <dl className="detail-list">
-            <div><dt>Purchase date</dt><dd>{item.purchaseDate || "—"}</dd></div>
-            <div><dt>Purchase price</dt><dd>{purchase}</dd></div>
-            <div><dt>Retailer</dt><dd>{item.retailer || "—"}</dd></div>
-            <div><dt>Installation date</dt><dd>{item.installationDate || "—"}</dd></div>
-            <div><dt>Warranty starts</dt><dd>{item.warrantyStartDate || "—"}</dd></div>
-            <div><dt>Warranty ends</dt><dd>{item.warrantyEndDate || "—"}</dd></div>
-            <div><dt>Expected life</dt><dd>{item.expectedLifetimeYears ? `${item.expectedLifetimeYears} years` : "—"}</dd></div>
-            <div><dt>Description</dt><dd>{item.description || "—"}</dd></div>
+            <div>
+              <dt>Purchase date</dt>
+              <dd>{item.purchaseDate || "—"}</dd>
+            </div>
+            <div>
+              <dt>Purchase price</dt>
+              <dd>{purchase}</dd>
+            </div>
+            <div>
+              <dt>Retailer</dt>
+              <dd>{item.retailer || "—"}</dd>
+            </div>
+            <div>
+              <dt>Installation date</dt>
+              <dd>{item.installationDate || "—"}</dd>
+            </div>
+            <div>
+              <dt>Warranty starts</dt>
+              <dd>{item.warrantyStartDate || "—"}</dd>
+            </div>
+            <div>
+              <dt>Warranty ends</dt>
+              <dd>{item.warrantyEndDate || "—"}</dd>
+            </div>
+            <div>
+              <dt>Expected life</dt>
+              <dd>
+                {item.expectedLifetimeYears
+                  ? `${item.expectedLifetimeYears} years`
+                  : "—"}
+              </dd>
+            </div>
+            <div>
+              <dt>Description</dt>
+              <dd>{item.description || "—"}</dd>
+            </div>
           </dl>
         </section>
 
         <AssetEditor asset={item} />
 
+        <AssetShortcutCard assetId={item.id} assetName={item.name} />
+
         <section className="dash-card">
-          <div className="dash-card-head"><h2>Timeline</h2><Wrench size={17} /></div>
+          <div className="dash-card-head">
+            <h2>Timeline</h2>
+            <Wrench size={17} />
+          </div>
           {maintenance.map((record) => (
             <div className="dash-task" key={record.id}>
-              <span><Wrench size={16} /></span>
-              <div><strong>Maintenance completed</strong><small>{record.notes || "No notes"}</small></div>
-              <time>{new Intl.DateTimeFormat("en", { dateStyle: "medium" }).format(record.completedAt)}</time>
+              <span>
+                <Wrench size={16} />
+              </span>
+              <div>
+                <strong>Maintenance completed</strong>
+                <small>
+                  {[
+                    record.notes || "No notes",
+                    record.serviceProvider,
+                    record.cost
+                      ? `${record.cost} ${record.currency ?? "EUR"}`
+                      : null,
+                  ]
+                    .filter(Boolean)
+                    .join(" · ")}
+                </small>
+              </div>
+              <time>
+                {new Intl.DateTimeFormat("en", {
+                  dateStyle: "medium",
+                }).format(record.completedAt)}
+              </time>
             </div>
           ))}
           {repairs.map((repair) => (
             <div className="dash-task" key={repair.id}>
-              <span><Wrench size={16} /></span>
-              <div><strong>{repair.title}</strong><small>{repair.status.toLowerCase()}</small></div>
+              <span>
+                <Wrench size={16} />
+              </span>
+              <div>
+                <strong>{repair.title}</strong>
+                <small>
+                  {[
+                    repair.status.toLowerCase(),
+                    repair.provider,
+                    repair.cost
+                      ? `${repair.cost} ${repair.currency ?? "EUR"}`
+                      : null,
+                  ]
+                    .filter(Boolean)
+                    .join(" · ")}
+                </small>
+              </div>
             </div>
           ))}
           {files.map((file) => (
             <div className="dash-task" key={file.id}>
-              <span><FileText size={16} /></span>
-              <div><strong>{file.title}</strong><small>{file.type.toLowerCase()}</small></div>
+              <span>
+                <FileText size={16} />
+              </span>
+              <div>
+                <strong>{file.title}</strong>
+                <small>{file.type.toLowerCase()}</small>
+              </div>
             </div>
           ))}
           {!maintenance.length && !repairs.length && !files.length && (
-            <p className="muted-copy">Maintenance, repairs, and attached documents will appear here.</p>
+            <p className="muted-copy">
+              Maintenance, repairs, and attached documents will appear here.
+            </p>
           )}
         </section>
       </div>
