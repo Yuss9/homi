@@ -25,31 +25,54 @@ type Notice = {
 };
 
 const states = ["ACTIVE", "UNREAD", "READ", "SNOOZED", "ALL"] as const;
+type NoticeState = (typeof states)[number];
+
+async function fetchNotifications(query: string, type: string, state: NoticeState) {
+  const params = new URLSearchParams({ state });
+  if (query.trim()) params.set("q", query.trim());
+  if (type) params.set("type", type);
+  const response = await fetch(`/api/notifications?${params}`);
+  return response.json() as Promise<{
+    notifications?: Notice[];
+    types?: string[];
+  }>;
+}
 
 export function NotificationWorkspace() {
   const [notices, setNotices] = useState<Notice[]>([]);
   const [types, setTypes] = useState<string[]>([]);
   const [query, setQuery] = useState("");
   const [type, setType] = useState("");
-  const [state, setState] = useState<(typeof states)[number]>("ACTIVE");
+  const [state, setState] = useState<NoticeState>("ACTIVE");
   const [loading, setLoading] = useState(true);
 
-  async function load() {
+  useEffect(() => {
+    let cancelled = false;
+    const timer = window.setTimeout(() => {
+      setLoading(true);
+      void fetchNotifications(query, type, state)
+        .then((payload) => {
+          if (cancelled) return;
+          setNotices(payload.notifications ?? []);
+          setTypes(payload.types ?? []);
+        })
+        .finally(() => {
+          if (!cancelled) setLoading(false);
+        });
+    }, 180);
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timer);
+    };
+  }, [query, type, state]);
+
+  async function reload() {
     setLoading(true);
-    const params = new URLSearchParams({ state });
-    if (query.trim()) params.set("q", query.trim());
-    if (type) params.set("type", type);
-    const response = await fetch(`/api/notifications?${params}`);
-    const payload = await response.json();
+    const payload = await fetchNotifications(query, type, state);
     setNotices(payload.notifications ?? []);
     setTypes(payload.types ?? []);
     setLoading(false);
   }
-
-  useEffect(() => {
-    const timer = window.setTimeout(() => void load(), 180);
-    return () => window.clearTimeout(timer);
-  }, [query, type, state]);
 
   async function mutate(payload: Record<string, unknown>) {
     await fetch("/api/notifications", {
@@ -57,7 +80,7 @@ export function NotificationWorkspace() {
       headers: { "content-type": "application/json" },
       body: JSON.stringify(payload),
     });
-    await load();
+    await reload();
   }
 
   function snoozeTomorrow(notificationId: string) {
@@ -73,7 +96,10 @@ export function NotificationWorkspace() {
         <div>
           <small>Attention, without noise</small>
           <h1>Notifications</h1>
-          <p>Open the related record, filter updates, or snooze them until tomorrow.</p>
+          <p>
+            Open the related record, filter updates, or snooze them until
+            tomorrow.
+          </p>
         </div>
         <button
           className="button"
@@ -172,7 +198,10 @@ export function NotificationWorkspace() {
                 className="icon-action"
                 aria-label={`Unsnooze ${notice.title}`}
                 onClick={() =>
-                  void mutate({ action: "UNSNOOZE", notificationId: notice.id })
+                  void mutate({
+                    action: "UNSNOOZE",
+                    notificationId: notice.id,
+                  })
                 }
               >
                 <Undo2 size={16} />
