@@ -3,6 +3,13 @@
 Notable changes to Homi are recorded here. This file is maintained by Release
 Please from Conventional Commit pull request titles.
 
+## [1.1.1](https://github.com/Yuss9/homi/compare/v1.1.0...v1.1.1) (2026-08-04)
+
+
+### Bug Fixes
+
+* enforce home boundaries and add global home switcher ([#13](https://github.com/Yuss9/homi/issues/13)) ([46c68b1](https://github.com/Yuss9/homi/commit/46c68b1f7baab4a305946f6df7e8c6ea4d84b74d))
+
 ## [1.1.0](https://github.com/Yuss9/homi/compare/v1.0.0...v1.1.0) (2026-08-01)
 
 
