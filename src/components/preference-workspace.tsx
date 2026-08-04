@@ -3,6 +3,7 @@
 import { useEffect, useState, type FormEvent } from "react";
 import Link from "next/link";
 import { Download, Save, ShieldCheck } from "lucide-react";
+import { ProfileSettings } from "@/src/components/profile-settings";
 
 export function PreferenceWorkspace() {
   const [preferences, setPreferences] = useState<Record<string, unknown> | null>(null);
@@ -28,12 +29,13 @@ export function PreferenceWorkspace() {
     });
     setMessage(response.ok ? "Preferences saved." : "Could not save preferences.");
   }
-  if (!preferences) return <main id="main" className="app-main"><p>Loading preferences…</p></main>;
+  if (!preferences) return <main id="main" className="app-main"><p>Loading settings…</p></main>;
   return (
     <main id="main" className="app-main">
-      <div className="dashboard-head"><div><small>Personal controls</small><h1>Settings</h1><p>Notifications, privacy, exports, timezone, and account security.</p></div></div>
+      <div className="dashboard-head"><div><small>Personal controls</small><h1>Settings</h1><p>Your household identity, notifications, privacy, timezone, and account security.</p></div></div>
       {message && <p className="form-success" role="status">{message}</p>}
       <div className="dash-grid" style={{ marginTop: 32 }}>
+        <ProfileSettings />
         <form className="dash-card auth-form" onSubmit={save}>
           <div className="dash-card-head"><h2>Reminder preferences</h2><Save size={17} /></div>
           <label className="check-row"><input name="emailEnabled" type="checkbox" defaultChecked={preferences.emailEnabled !== false} /> Email reminders</label>
