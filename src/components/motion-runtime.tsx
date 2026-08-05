@@ -35,6 +35,7 @@ export function MotionRuntime() {
     }
 
     const observed = new WeakSet<HTMLElement>();
+    const revealOrder = new WeakMap<HTMLElement, number>();
     let frame = 0;
 
     const observer = new IntersectionObserver(
@@ -42,7 +43,6 @@ export function MotionRuntime() {
         for (const entry of entries) {
           if (!entry.isIntersecting) continue;
           const element = entry.target as HTMLElement;
-          const order = Number(element.dataset.revealOrder ?? "0");
           element.animate(
             [
               {
@@ -58,7 +58,7 @@ export function MotionRuntime() {
             ],
             {
               duration: 820,
-              delay: (order % 8) * 42,
+              delay: ((revealOrder.get(element) ?? 0) % 8) * 42,
               easing: "cubic-bezier(0.16, 1, 0.3, 1)",
               fill: "both",
             },
@@ -76,14 +76,14 @@ export function MotionRuntime() {
 
       for (const [index, element] of elements.entries()) {
         observed.add(element);
-        element.dataset.revealOrder = String(index % 8);
+        revealOrder.set(element, index);
         observer.observe(element);
       }
     };
 
-    // Let the current React tree finish hydrating before observing it. The
-    // Web Animations API changes presentation only and does not alter the DOM
-    // attributes React reconciles, avoiding hydration warnings on route changes.
+    // Let the current React tree finish hydrating before observing it. The Web
+    // Animations API changes presentation without changing reconciled classes,
+    // attributes or inline styles, so route transitions stay hydration-safe.
     frame = requestAnimationFrame(() => {
       frame = requestAnimationFrame(register);
     });
