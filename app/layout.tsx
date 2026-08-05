@@ -10,6 +10,7 @@ import "./high-value-tools.css";
 import "./connected-platform.css";
 import "./ui-polish.css";
 import "./visual-system.css";
+import "./visual-system-fixes.css";
 
 const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
 const geistMono = Geist_Mono({
