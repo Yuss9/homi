@@ -2,12 +2,14 @@ import Link from "next/link";
 import { cookies } from "next/headers";
 import { and, count, eq, isNull, or } from "drizzle-orm";
 import {
+  ArrowRight,
   CalendarDays,
   Coins,
   FileText,
   Package,
   Plus,
   ShieldCheck,
+  Sparkles,
   TriangleAlert,
   Wrench,
 } from "lucide-react";
@@ -168,7 +170,7 @@ export default async function DashboardPage() {
 
   return (
     <main id="main" className="app-main">
-      <div className="dashboard-head">
+      <div className="dashboard-head" data-reveal>
         <div>
           <small>{dateLabel}</small>
           <h1>{greeting}, {session.user.name.split(" ")[0]}.</h1>
@@ -183,6 +185,33 @@ export default async function DashboardPage() {
           {membership ? "Add something" : "Start setup"}
         </Link>
       </div>
+
+      {membership ? (
+        <section className="dashboard-atmosphere" data-reveal aria-label="Home care overview">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="https://images.pexels.com/photos/7512985/pexels-photo-7512985.jpeg?auto=compress&cs=tinysrgb&w=1800"
+            alt="Everyday care in a bright contemporary kitchen"
+            loading="eager"
+            decoding="async"
+            referrerPolicy="no-referrer"
+          />
+          <div className="dashboard-atmosphere-copy">
+            <small>Today at {membership.home.name}</small>
+            <h2>{summary?.health.title ?? "A clear place for everything your home needs."}</h2>
+            <p>
+              {summary?.health.summary ??
+                "Add equipment, routines and documents once, then let Homi keep the household memory close."}
+            </p>
+            <Link className="button button-light button-small" href="/maintenance">
+              Open maintenance <ArrowRight size={15} />
+            </Link>
+          </div>
+          <div className="dashboard-atmosphere-badge">
+            <Sparkles size={14} /> {summary ? `${summary.health.score}/100 home health` : "Ready to begin"}
+          </div>
+        </section>
+      ) : null}
 
       {summary && widgets ? (
         <div className="personalized-dashboard">
