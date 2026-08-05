@@ -95,18 +95,15 @@ test("authenticated dashboard and Operations remain visually stable", async ({
   await page.goto("/dashboard");
   const dashboardAtmosphere = page.locator(".dashboard-atmosphere");
   await expect(dashboardAtmosphere).toBeVisible();
-  await expect(
-    dashboardAtmosphere.locator("img[src*='images.pexels.com']"),
-  ).toHaveAttribute("alt", /home|kitchen|care/i);
+  const dashboardImage = dashboardAtmosphere.locator(
+    "img[src*='images.pexels.com']",
+  );
+  await expect(dashboardImage).toHaveAttribute("alt", /home|kitchen|care/i);
+  await expect(dashboardImage).toHaveCSS("animation-name", "none");
 
-  await page.evaluate(async () => {
-    await Promise.all(
-      document.getAnimations().map((animation) =>
-        animation.finished.catch(() => undefined),
-      ),
-    );
-  });
-
+  // The reveal motion is finite. After it settles, pointer movement must not
+  // alter the card's position or shadow and trigger compositor flicker.
+  await page.waitForTimeout(750);
   const dashboardCard = page.locator(".dash-card").first();
   await expect(dashboardCard).toBeVisible();
   const beforeHover = await dashboardCard.evaluate((element) => {
