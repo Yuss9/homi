@@ -1,14 +1,45 @@
 import { expect, test } from "@playwright/test";
 
-test("polished product surfaces keep actions inside their cards", async ({
+test("colorful editorial product surfaces stay accessible and contained", async ({
   page,
 }) => {
+  const landingResponse = await page.goto("/");
+  expect(landingResponse?.status()).toBe(200);
+  await expect(
+    page.getByRole("heading", { name: /Care for your home,\s*effortlessly/i }),
+  ).toBeVisible();
+  await expect(page.getByText("Photography · Pexels")).toBeVisible();
+  await expect(page.locator("img[src*='images.pexels.com']").first()).toBeVisible();
+
+  const headers = landingResponse?.headers() ?? {};
+  expect(headers["content-security-policy"]).toContain(
+    "https://images.pexels.com",
+  );
+  expect(headers["permissions-policy"]).toContain("camera=(self)");
+  await expect
+    .poll(() =>
+      page.evaluate(() =>
+        getComputedStyle(document.documentElement)
+          .getPropertyValue("--homi-sage")
+          .trim(),
+      ),
+    )
+    .toBe("#607e69");
+
   const homesResponse = await page.request.get("/api/homes");
   expect(homesResponse.status()).toBe(200);
   const homes = (await homesResponse.json()) as {
     homes: Array<{ id: string }>;
   };
   const homeId = homes.homes[0]!.id;
+
+  await page.goto("/dashboard");
+  const dashboardAtmosphere = page.locator(".dashboard-atmosphere");
+  await expect(dashboardAtmosphere).toBeVisible();
+  await expect(
+    dashboardAtmosphere.locator("img[src*='images.pexels.com']"),
+  ).toHaveAttribute("alt", /home|kitchen|care/i);
+
   const suffix = crypto.randomUUID().slice(0, 8);
   const title = `Future UI check ${suffix}`;
   const taskResponse = await page.request.post("/api/tasks", {
@@ -53,6 +84,9 @@ test("polished product surfaces keep actions inside their cards", async ({
   await expect(
     page.getByRole("heading", { name: "One place, four simple jobs." }),
   ).toBeVisible();
+  await expect(
+    page.locator(".operations-guide-photo img[src*='images.pexels.com']"),
+  ).toHaveAttribute("alt", /home care|kitchen counter/i);
   await expect(page.getByRole("tab", { name: /Maintenance/ })).toBeVisible();
   await expect(page.getByRole("tab", { name: /Insurance/ })).toBeVisible();
 
