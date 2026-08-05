@@ -1,0 +1,19 @@
+.dashboard-atmosphere-copy .button {
+  margin-top: 22px;
+}
+
+.dashboard-atmosphere-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.operations-guide-photo {
+  pointer-events: none;
+}
+
+@media (max-height: 920px) and (min-width: 981px) {
+  .sidebar-home-visual {
+    display: none;
+  }
+}
