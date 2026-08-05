@@ -4,8 +4,12 @@ test.use({ storageState: { cookies: [], origins: [] } });
 
 test("landing page is accessible and responsive", async ({ page, isMobile }) => {
   await page.goto("/");
-  await expect(page.getByRole("heading", { name: "Your home, remembered." })).toBeVisible();
-  await expect(page.getByRole("link", { name: /Start your journal/i })).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: /Care for your home,\s*effortlessly/i }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("link", { name: /Start your home journal/i }),
+  ).toBeVisible();
   const marketingHeader = page.locator("header");
   if (!isMobile) {
     await expect(
