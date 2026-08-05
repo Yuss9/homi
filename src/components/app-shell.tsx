@@ -141,6 +141,20 @@ export function AppShell({
           ))}
         </nav>
         <div className="sidebar-bottom">
+          <div className="sidebar-home-visual" aria-label="A well cared for home">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="https://images.pexels.com/photos/7587880/pexels-photo-7587880.jpeg?auto=compress&cs=tinysrgb&w=700"
+              alt="A modern home surrounded by a green garden"
+              loading="lazy"
+              decoding="async"
+              referrerPolicy="no-referrer"
+            />
+            <div>
+              <strong>Care that becomes memory.</strong>
+              <small>Keep the details close to the home they explain.</small>
+            </div>
+          </div>
           <nav className="app-nav">
             <NavLink
               href="/settings"
