@@ -19,10 +19,6 @@ const revealSelector = [
   ".cost-summary-card",
 ].join(",");
 
-function revealImmediately(elements: HTMLElement[]) {
-  for (const element of elements) element.classList.add("is-revealed");
-}
-
 export function MotionRuntime() {
   const pathname = usePathname();
 
@@ -30,27 +26,43 @@ export function MotionRuntime() {
     const reducedMotion = window.matchMedia(
       "(prefers-reduced-motion: reduce)",
     ).matches;
-    const root = document.documentElement;
-    const observed = new Set<HTMLElement>();
-    let frame = 0;
-
-    const collect = () =>
-      Array.from(document.querySelectorAll<HTMLElement>(revealSelector)).filter(
-        (element) => !observed.has(element),
-      );
-
-    if (reducedMotion || !("IntersectionObserver" in window)) {
-      revealImmediately(collect());
+    if (
+      reducedMotion ||
+      !("IntersectionObserver" in window) ||
+      !("animate" in HTMLElement.prototype)
+    ) {
       return;
     }
 
-    root.classList.add("motion-enabled");
+    const observed = new WeakSet<HTMLElement>();
+    let frame = 0;
+
     const observer = new IntersectionObserver(
       (entries) => {
         for (const entry of entries) {
           if (!entry.isIntersecting) continue;
           const element = entry.target as HTMLElement;
-          element.classList.add("is-revealed");
+          const order = Number(element.dataset.revealOrder ?? "0");
+          element.animate(
+            [
+              {
+                opacity: 0,
+                transform: "translate3d(0, 24px, 0) scale(0.985)",
+                filter: "blur(8px)",
+              },
+              {
+                opacity: 1,
+                transform: "translate3d(0, 0, 0) scale(1)",
+                filter: "blur(0)",
+              },
+            ],
+            {
+              duration: 820,
+              delay: (order % 8) * 42,
+              easing: "cubic-bezier(0.16, 1, 0.3, 1)",
+              fill: "both",
+            },
+          );
           observer.unobserve(element);
         }
       },
@@ -58,16 +70,24 @@ export function MotionRuntime() {
     );
 
     const register = () => {
-      const elements = collect();
+      const elements = Array.from(
+        document.querySelectorAll<HTMLElement>(revealSelector),
+      ).filter((element) => !observed.has(element));
+
       for (const [index, element] of elements.entries()) {
         observed.add(element);
-        element.classList.add("homi-reveal");
-        element.style.setProperty("--reveal-order", String(index % 8));
+        element.dataset.revealOrder = String(index % 8);
         observer.observe(element);
       }
     };
 
-    register();
+    // Let the current React tree finish hydrating before observing it. The
+    // Web Animations API changes presentation only and does not alter the DOM
+    // attributes React reconciles, avoiding hydration warnings on route changes.
+    frame = requestAnimationFrame(() => {
+      frame = requestAnimationFrame(register);
+    });
+
     const mutations = new MutationObserver(() => {
       cancelAnimationFrame(frame);
       frame = requestAnimationFrame(register);
@@ -78,7 +98,6 @@ export function MotionRuntime() {
       cancelAnimationFrame(frame);
       mutations.disconnect();
       observer.disconnect();
-      root.classList.remove("motion-enabled");
     };
   }, [pathname]);
 
