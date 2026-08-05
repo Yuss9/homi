@@ -3,6 +3,13 @@
 Notable changes to Homi are recorded here. This file is maintained by Release
 Please from Conventional Commit pull request titles.
 
+## [1.8.1](https://github.com/Yuss9/homi/compare/v1.8.0...v1.8.1) (2026-08-04)
+
+
+### Bug Fixes
+
+* clarify product UI and refresh landing page ([#31](https://github.com/Yuss9/homi/issues/31)) ([c7abeba](https://github.com/Yuss9/homi/commit/c7abebaf58786be933d3a307eeada274ce5eea26))
+
 ## [1.8.0](https://github.com/Yuss9/homi/compare/v1.7.0...v1.8.0) (2026-08-04)
 
 
