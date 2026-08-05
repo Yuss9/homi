@@ -3,6 +3,13 @@
 Notable changes to Homi are recorded here. This file is maintained by Release
 Please from Conventional Commit pull request titles.
 
+## [1.9.0](https://github.com/Yuss9/homi/compare/v1.8.1...v1.9.0) (2026-08-05)
+
+
+### Features
+
+* add colorful editorial motion system ([#34](https://github.com/Yuss9/homi/issues/34)) ([447233d](https://github.com/Yuss9/homi/commit/447233d851f8c057c6f99c7d07c4a22b0e5b240a))
+
 ## [1.8.1](https://github.com/Yuss9/homi/compare/v1.8.0...v1.8.1) (2026-08-04)
 
 
