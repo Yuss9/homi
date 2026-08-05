@@ -2,11 +2,13 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import {
   ArrowRight,
+  Bell,
   CalendarDays,
   Camera,
   Check,
   FileText,
   House,
+  Link2,
   LockKeyhole,
   Package,
   QrCode,
@@ -17,45 +19,56 @@ import {
 } from "lucide-react";
 import { SignOutButton } from "@/src/components/sign-out-button";
 import { getOptionalSession } from "@/src/server/authorization";
-import styles from "./home-refresh.module.css";
+import styles from "./home-vibrant.module.css";
 
 export const metadata: Metadata = {
-  title: "Your home, remembered",
+  title: "Care for your home, effortlessly",
   description:
-    "Homi keeps maintenance, warranties, manuals, repairs, equipment and household documents organized in one private home journal.",
+    "Homi brings maintenance, warranties, manuals, repairs, equipment and household documents into one calm private home journal.",
   alternates: { canonical: "/" },
 };
+
+const railFeatures = [
+  { icon: CalendarDays, title: "Maintenance", body: "Recurring care without the project-board noise." },
+  { icon: Wrench, title: "Repairs", body: "Issues, costs and history in one clear record." },
+  { icon: FileText, title: "Documents", body: "Manuals, receipts and certificates where they belong." },
+  { icon: ShieldCheck, title: "Warranties", body: "Coverage dates that remain easy to find." },
+  { icon: Bell, title: "Reminders", body: "Useful prompts before small work becomes a problem." },
+  { icon: QrCode, title: "QR scanning", body: "Open the right equipment record while beside it." },
+  { icon: Link2, title: "Integrations", body: "Home Assistant, calendars, widgets and scoped APIs." },
+  { icon: Users, title: "Household", body: "Share the memory without sharing every permission." },
+];
 
 const features = [
   {
     icon: CalendarDays,
     title: "Maintenance that stays calm",
-    body: "Recurring care, checklists, reminders and a clear calendar without turning your home into another project board.",
+    body: "Recurring care, checklists, seasonal rules and a clear calendar that make the next job obvious without making the home feel like another workplace.",
   },
   {
     icon: Package,
-    title: "Every object has a story",
-    body: "Keep model numbers, warranties, repairs, replacement history and useful notes attached to the right equipment.",
+    title: "Every object keeps its story",
+    body: "Model numbers, QR labels, warranties, repairs, replacement history and useful notes stay attached to the right equipment.",
   },
   {
     icon: FileText,
-    title: "Documents where they belong",
-    body: "Invoices, manuals, photos and certificates remain private and connected to the room, task or repair they explain.",
+    title: "Documents live with the work",
+    body: "Invoices, manuals, photos and certificates remain private and connected to the room, maintenance task or repair they explain.",
   },
   {
     icon: Camera,
-    title: "Made for the phone in your hand",
-    body: "Install the PWA, scan a label, capture a document and open the exact equipment record while standing beside it.",
+    title: "Built for the phone in your hand",
+    body: "Install the PWA, capture an equipment label, attach a photo and open a record while standing exactly where the work happens.",
   },
   {
     icon: Users,
     title: "A shared household memory",
-    body: "Give family, housemates or trusted helpers the right role while sensitive actions remain protected on the server.",
+    body: "Family, housemates and trusted helpers can contribute with the right role while sensitive actions remain protected on the server.",
   },
   {
-    icon: QrCode,
+    icon: Link2,
     title: "Connected to the real home",
-    body: "QR labels, Home Assistant, widgets, private calendars and scoped APIs make Homi useful beyond the browser.",
+    body: "Home Assistant, private calendars, widgets, MQTT and scoped APIs let Homi surface useful context beyond the browser.",
   },
 ];
 
@@ -92,8 +105,8 @@ function EditorialImage({
   loading?: "eager" | "lazy";
 }) {
   return (
-    // These editorial photos intentionally remain ordinary images so the
-    // public page does not require a Next.js remote-image allowlist.
+    // Pexels photography is deliberately rendered as an ordinary image. The
+    // host is explicitly allowed by the production CSP and credited below.
     // eslint-disable-next-line @next/next/no-img-element
     <img
       src={src}
@@ -131,9 +144,7 @@ export default async function MarketingHome() {
           <div className={styles.navActions}>
             {session ? (
               <>
-                <SignOutButton
-                  className={`${styles.signIn} ${styles.sessionButton}`}
-                />
+                <SignOutButton className={`${styles.signIn} ${styles.sessionButton}`} />
                 <Link className={styles.smallButton} href={accountHref}>
                   {accountLabel}
                   <ArrowRight size={15} />
@@ -156,99 +167,129 @@ export default async function MarketingHome() {
 
       <main id="main">
         <section className={styles.hero}>
-          <div className={styles.heroCopy}>
-            <p className={styles.eyebrow}>A private memory for your home</p>
-            <h1>Your home, remembered.</h1>
+          <div className={styles.heroCopy} data-reveal>
+            <p className={styles.eyebrow}>A private operating system for the home</p>
+            <h1>
+              Care for your home,
+              <span>effortlessly.</span>
+            </h1>
             <p className={styles.heroLede}>
-              Homi gives maintenance, equipment, documents and household know-how
-              one calm place—so caring for a home feels lighter, not busier.
+              Homi turns maintenance, equipment, documents and household know-how
+              into one clear memory—so the home stays cared for without feeling
+              like another job.
             </p>
             <div className={styles.heroActions}>
               <Link
                 className={styles.primaryButton}
                 href={session ? accountHref : "/sign-up"}
               >
-                {session ? accountLabel : "Start your journal"}
+                {session ? accountLabel : "Start your home journal"}
                 <ArrowRight size={17} />
               </Link>
-              <Link className={styles.quietLink} href="#features">
-                See what Homi remembers
-                <ArrowRight size={15} />
+              <Link className={styles.secondaryButton} href="#features">
+                Explore Homi
+                <Sparkles size={16} />
               </Link>
+            </div>
+            <div className={styles.trustLine} aria-label="Built for real households">
+              <div className={styles.trustAvatars} aria-hidden="true">
+                <span>AM</span><span>JL</span><span>SK</span>
+              </div>
+              <span>Private by default · designed for real households</span>
             </div>
           </div>
 
-          <div className={styles.heroVisual} aria-label="A modern home and Homi preview">
-            <figure className={styles.heroHouse}>
-              <EditorialImage
-                loading="eager"
-                src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1800&q=86"
-                alt="A warm modern house surrounded by trees"
-              />
-            </figure>
-            <figure className={styles.heroPeople}>
-              <EditorialImage
-                loading="eager"
-                src="https://images.unsplash.com/photo-1529156069898-49953e39b3ac?auto=format&fit=crop&w=700&q=84"
-                alt="Friends sharing a relaxed moment together"
-              />
-            </figure>
-            <div className={styles.productFloat}>
-              <div className={styles.floatTop}>
-                <span>Cedar House · Today</span>
-                <strong>Home health 94</strong>
-              </div>
-              <h2>Everything is in order.</h2>
-              <p>One small maintenance task is coming up this week.</p>
+          <div className={styles.heroVisual} data-reveal>
+            <EditorialImage
+              loading="eager"
+              src="https://images.pexels.com/photos/7512985/pexels-photo-7512985.jpeg?auto=compress&cs=tinysrgb&w=1800"
+              alt="A person taking care of a bright contemporary kitchen"
+            />
+
+            <div className={styles.floatCard}>
+              <small>Coming up · 3</small>
+              <h2>The week is under control.</h2>
               <div className={styles.floatTask}>
-                <span>
-                  <Wrench size={16} />
-                </span>
-                <div>
-                  <strong>Check boiler pressure</strong>
-                  <small>Utility room · about 5 minutes</small>
-                </div>
-                <time>Thu</time>
+                <span><Wrench size={15} /></span>
+                <div><strong>Change HVAC filter</strong><small>Due in 7 days</small></div>
               </div>
+              <div className={styles.floatTask}>
+                <span><ShieldCheck size={15} /></span>
+                <div><strong>Check smoke alarms</strong><small>Due in 18 days</small></div>
+              </div>
+            </div>
+
+            <div className={styles.healthCard}>
+              <small>Home health</small>
+              <strong>94</strong>
+              <div className={styles.healthLine} aria-hidden="true" />
+              <small>Everything important is on track.</small>
+            </div>
+
+            <div className={styles.scanCard}>
+              <small>Scan to open</small>
+              <div className={styles.scanCode} aria-hidden="true">
+                {Array.from({ length: 25 }, (_, index) => <i key={index} />)}
+              </div>
+              <small>Equipment, files and history</small>
+            </div>
+
+            <div className={styles.integrationCard}>
+              <span><House size={16} /></span>
+              <div><strong>Home Assistant</strong><small>Connected</small></div>
             </div>
           </div>
         </section>
 
-        <section className={styles.promiseStrip} aria-label="Homi promises">
-          <span>Private by default</span>
-          <span>Designed for real households</span>
-          <span>Self-hosted and yours</span>
+        <section className={styles.featureRail} aria-label="Homi capabilities" data-reveal>
+          {railFeatures.map(({ icon: Icon, title, body }) => (
+            <article className={styles.railItem} key={title}>
+              <span className={styles.railIcon}><Icon size={19} strokeWidth={1.7} /></span>
+              <strong>{title}</strong>
+              <small>{body}</small>
+            </article>
+          ))}
         </section>
 
         <section className={styles.story}>
-          <div>
+          <div className={styles.storyCopy} data-reveal>
             <p className={styles.eyebrow}>The home is more than an address</p>
             <h2>A living record of everyday care.</h2>
-          </div>
-          <div className={styles.storyCopy}>
             <p>
               Receipts disappear into drawers. A filter is changed but nobody
-              remembers when. The person who knows the boiler leaves for the
-              weekend exactly when it starts making a noise.
+              remembers when. Homi brings those scattered details together so the
+              people who live there can understand what happened and what comes next.
             </p>
-            <p>
-              Homi turns those scattered details into a clear history shared by
-              the people who live there—without adding noise to daily life.
-            </p>
+          </div>
+          <div className={styles.storyMedia} data-reveal>
+            <figure className={styles.storyHouse}>
+              <EditorialImage
+                src="https://images.pexels.com/photos/7587880/pexels-photo-7587880.jpeg?auto=compress&cs=tinysrgb&w=1700"
+                alt="A minimalist modern house with a green garden"
+              />
+            </figure>
+            <figure className={styles.storyChore}>
+              <EditorialImage
+                src="https://images.pexels.com/photos/5591909/pexels-photo-5591909.jpeg?auto=compress&cs=tinysrgb&w=900"
+                alt="Hands cleaning a kitchen counter as part of everyday home care"
+              />
+            </figure>
+            <div className={styles.storyBadge}>
+              <strong>One home, one memory</strong>
+              <small>Care, files and decisions remain connected.</small>
+            </div>
           </div>
         </section>
 
-        <section className={styles.features} id="features">
-          <div className={styles.sectionHead}>
+        <section className={styles.featureSection} id="features">
+          <div className={styles.sectionHead} data-reveal>
             <p className={styles.eyebrow}>One product, the whole home</p>
             <h2>Useful before, during and after something needs attention.</h2>
           </div>
           <div className={styles.featureGrid}>
             {features.map(({ icon: Icon, title, body }) => (
-              <article className={styles.featureCard} key={title}>
-                <span>
-                  <Icon size={20} strokeWidth={1.7} />
-                </span>
+              <article className={styles.featureCard} key={title} data-reveal>
+                <span><Icon size={21} strokeWidth={1.7} /></span>
                 <h3>{title}</h3>
                 <p>{body}</p>
               </article>
@@ -256,84 +297,92 @@ export default async function MarketingHome() {
           </div>
         </section>
 
-        <section className={styles.life} id="everyday">
-          <figure className={styles.lifeImage}>
+        <section className={styles.everyday} id="everyday">
+          <figure className={styles.everydayPhoto} data-reveal>
             <EditorialImage
-              src="https://images.unsplash.com/photo-1600566753086-00f18fb6b3ea?auto=format&fit=crop&w=1500&q=86"
-              alt="A calm, light-filled modern home interior"
+              src="https://images.pexels.com/photos/8082205/pexels-photo-8082205.jpeg?auto=compress&cs=tinysrgb&w=1600"
+              alt="A calm modern living space filled with natural light"
             />
+            <div className={styles.phoneCard}>
+              <div className={styles.phoneCardHead}>
+                <strong>Today at Cedar House</strong>
+                <span>Home health 94</span>
+              </div>
+              <div className={styles.phoneTask}>
+                <span><Camera size={16} /></span>
+                <div><strong>Quick scan</strong><small>Open a product or document</small></div>
+                <time>Now</time>
+              </div>
+              <div className={styles.phoneTask}>
+                <span><Check size={16} /></span>
+                <div><strong>Boiler pressure checked</strong><small>Utility room · completed</small></div>
+                <time>10:42</time>
+              </div>
+            </div>
           </figure>
-          <div className={styles.lifeCopy}>
+
+          <div className={styles.everydayCopy} data-reveal>
             <p className={styles.eyebrow}>Designed around the moment</p>
             <h2>Open Homi where the work happens.</h2>
             <p>
-              Scan the appliance label in the kitchen, attach the invoice after a
-              repair, check the maintenance list from the sofa or let Home
-              Assistant surface what matters. The product follows the home.
+              Scan a label in the kitchen, attach the invoice after a repair,
+              check the list from the sofa or let Home Assistant surface what
+              matters. The product follows the home instead of asking the home to
+              follow the product.
             </p>
-            <div className={styles.lifeList}>
+            <div className={styles.everydayList}>
               <div>
-                <Camera size={20} />
-                <span>
-                  <strong>At the equipment</strong>
-                  <small>Camera scan, QR labels and quick actions.</small>
-                </span>
+                <span><Camera size={18} /></span>
+                <span><strong>At the equipment</strong><small>Camera capture, QR labels and exact records.</small></span>
               </div>
               <div>
-                <Check size={20} />
-                <span>
-                  <strong>While the work is fresh</strong>
-                  <small>Checklists, photos, costs and completion history.</small>
-                </span>
+                <span><Check size={18} /></span>
+                <span><strong>While the work is fresh</strong><small>Checklists, photos, costs and completion history.</small></span>
               </div>
               <div>
-                <Sparkles size={20} />
-                <span>
-                  <strong>Before the next problem</strong>
-                  <small>Gentle reminders, budgets and replacement forecasts.</small>
-                </span>
+                <span><Sparkles size={18} /></span>
+                <span><strong>Before the next problem</strong><small>Gentle reminders, budgets and replacement forecasts.</small></span>
               </div>
             </div>
           </div>
         </section>
 
         <section className={styles.privacy}>
-          <div className={styles.privacyCopy}>
+          <div className={styles.privacyCopy} data-reveal>
             <p className={styles.eyebrow}>Privacy belongs in the architecture</p>
-            <h2>Your home is personal. Homi treats it that way.</h2>
+            <h2>Your data. Your home. Your choice.</h2>
             <p>
               Private files are authorized on every request, household roles are
-              enforced on the server and Homi contains no advertising trackers,
-              payment profiling or hidden analytics.
+              enforced on the server and self-hosting keeps the database, files and
+              backups under your control.
             </p>
           </div>
-          <div className={styles.privacyPoints}>
-            <div>
+          <div className={styles.privacyGrid}>
+            <article className={styles.privacyPoint} data-reveal>
               <LockKeyhole size={22} />
-              <span>
-                <strong>Private file storage</strong>
-                <small>No public document URLs.</small>
-              </span>
-            </div>
-            <div>
+              <strong>Private file storage</strong>
+              <small>No public document URLs and no advertising trackers.</small>
+            </article>
+            <article className={styles.privacyPoint} data-reveal>
               <ShieldCheck size={22} />
-              <span>
-                <strong>Protected household boundaries</strong>
-                <small>Every home and role is checked server-side.</small>
-              </span>
-            </div>
-            <div>
+              <strong>Protected boundaries</strong>
+              <small>Every home and role is checked server-side.</small>
+            </article>
+            <article className={styles.privacyPoint} data-reveal>
               <House size={22} />
-              <span>
-                <strong>Self-hosted ownership</strong>
-                <small>Your database, files and backups remain yours.</small>
-              </span>
-            </div>
+              <strong>Self-hosted ownership</strong>
+              <small>Your instance and backups remain yours.</small>
+            </article>
+            <article className={styles.privacyPoint} data-reveal>
+              <Users size={22} />
+              <strong>Purposeful collaboration</strong>
+              <small>Share only the access each person actually needs.</small>
+            </article>
           </div>
         </section>
 
         <section className={styles.finalCta}>
-          <div>
+          <div data-reveal>
             <p className={styles.eyebrow}>A calmer way to care for home</p>
             <h2>Remember once. Find it whenever the house needs it.</h2>
             <p>
@@ -362,11 +411,11 @@ export default async function MarketingHome() {
           <Link href="/terms">Terms</Link>
           <a
             className={styles.photoCredit}
-            href="https://unsplash.com/?utm_source=homi&utm_medium=referral"
+            href="https://www.pexels.com/?utm_source=homi&utm_medium=referral"
             target="_blank"
             rel="noreferrer"
           >
-            Photography · Unsplash
+            Photography · Pexels
           </a>
         </nav>
       </footer>

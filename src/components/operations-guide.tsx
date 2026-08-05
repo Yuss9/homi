@@ -23,8 +23,22 @@ const steps = [
 
 export function OperationsGuide() {
   return (
-    <section className="operations-guide" aria-labelledby="operations-guide-title">
+    <section
+      className="operations-guide"
+      aria-labelledby="operations-guide-title"
+      data-reveal
+    >
       <div className="operations-guide-inner">
+        <div className="operations-guide-photo">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="https://images.pexels.com/photos/5591909/pexels-photo-5591909.jpeg?auto=compress&cs=tinysrgb&w=1200"
+            alt="Hands cleaning a kitchen counter during everyday home care"
+            loading="lazy"
+            decoding="async"
+            referrerPolicy="no-referrer"
+          />
+        </div>
         <div className="operations-guide-head">
           <div>
             <small>How to use this workspace</small>

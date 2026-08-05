@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { cookies } from "next/headers";
 import { Geist, Geist_Mono } from "next/font/google";
+import { MotionRuntime } from "@/src/components/motion-runtime";
 import { PwaRuntime } from "@/src/components/pwa-runtime";
 import "./globals.css";
 import "./resource-management.css";
@@ -8,6 +9,8 @@ import "./household-profile.css";
 import "./high-value-tools.css";
 import "./connected-platform.css";
 import "./ui-polish.css";
+import "./visual-system.css";
+import "./visual-system-fixes.css";
 
 const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
 const geistMono = Geist_Mono({
@@ -86,8 +89,8 @@ export const viewport: Viewport = {
   initialScale: 1,
   viewportFit: "cover",
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#f4f6f8" },
-    { media: "(prefers-color-scheme: dark)", color: "#161715" },
+    { media: "(prefers-color-scheme: light)", color: "#f4f5f2" },
+    { media: "(prefers-color-scheme: dark)", color: "#151815" },
   ],
   colorScheme: "light dark",
 };
@@ -104,6 +107,7 @@ export default async function RootLayout({
           Skip to content
         </a>
         <PwaRuntime />
+        <MotionRuntime />
         {children}
       </body>
     </html>

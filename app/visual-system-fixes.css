@@ -1,0 +1,177 @@
+.dashboard-atmosphere-copy .button {
+  margin-top: 22px;
+}
+
+.dashboard-atmosphere-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.operations-guide-photo {
+  pointer-events: none;
+}
+
+/* Keep the landing hero as one contained editorial frame. The Pexels image is
+   pinned to the frame instead of relying on percentage height from a
+   min-height-only parent, and every floating card remains inside its bounds. */
+[class*="heroVisual"] {
+  height: clamp(620px, 72vh, 760px);
+  min-height: 0 !important;
+  isolation: isolate;
+  contain: paint;
+}
+
+[class*="heroVisual"] > img {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 56% center;
+  transform: none !important;
+  animation: none !important;
+}
+
+[class*="heroVisual"] > [class*="Card"] {
+  max-width: calc(100% - 28px);
+  box-sizing: border-box;
+}
+
+[class*="integrationCard"] {
+  right: 24px !important;
+  bottom: 24px !important;
+  left: auto !important;
+  white-space: nowrap;
+}
+
+/* Large animated blurs, backdrop filters and transform-driven hover shadows
+   can be composited differently while the pointer crosses neighbouring cards.
+   Keep the depth, but make it static so pages do not flash or pulse. */
+.app-body::before,
+.app-body::after {
+  animation: none !important;
+  filter: none !important;
+  opacity: 0.07;
+}
+
+.dashboard-atmosphere > img,
+[class*="floatCard"],
+[class*="healthCard"],
+[class*="scanCard"],
+[class*="integrationCard"] {
+  animation: none !important;
+  transform: none !important;
+}
+
+.app-sidebar,
+.app-topbar,
+.home-switcher,
+.app-user,
+.dashboard-atmosphere-badge,
+.operations-guide-step,
+.operations-tabs .button,
+[class*="floatCard"],
+[class*="healthCard"],
+[class*="scanCard"],
+[class*="integrationCard"],
+[class*="featureRail"],
+[class*="storyBadge"],
+[class*="phoneCard"] {
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+}
+
+.button,
+.dash-card,
+.template-card,
+.operations-item,
+.cost-summary-card,
+.operations-guide-step,
+.operations-tabs .button,
+.sidebar-home-visual img,
+.operations-guide-photo img,
+.app-nav a svg,
+[class*="smallButton"],
+[class*="primaryButton"],
+[class*="secondaryButton"],
+[class*="railItem"],
+[class*="featureCard"],
+[class*="storyHouse"] img,
+[class*="storyChore"] img,
+[class*="everydayPhoto"] img {
+  transition-property: color, background-color, border-color, opacity !important;
+  transition-duration: 180ms !important;
+}
+
+.button:hover,
+[class*="smallButton"]:hover,
+[class*="primaryButton"]:hover,
+[class*="secondaryButton"]:hover,
+.dash-card:hover,
+.template-card:hover,
+.operations-item:hover,
+.cost-summary-card:hover,
+.operations-guide-step:hover,
+.operations-tabs .button:hover,
+.sidebar-home-visual:hover img,
+.operations-guide-inner:hover .operations-guide-photo img,
+.app-nav a:hover svg,
+.app-nav a.active svg,
+[class*="railItem"]:hover,
+[class*="featureCard"]:hover,
+[class*="storyHouse"]:hover img,
+[class*="storyChore"]:hover img,
+[class*="everydayPhoto"]:hover img {
+  transform: none !important;
+}
+
+.button:hover {
+  box-shadow: 0 8px 24px rgba(63, 95, 76, 0.16) !important;
+}
+
+.button-secondary:hover,
+.button-ghost:hover {
+  box-shadow: none !important;
+}
+
+.dash-card:hover,
+.template-card:hover,
+.operations-item:hover,
+.cost-summary-card:hover {
+  border-color: rgba(75, 91, 80, 0.11) !important;
+  box-shadow: 0 9px 30px rgba(37, 49, 41, 0.045) !important;
+}
+
+.operations-guide-step:hover,
+.operations-tabs .button:hover {
+  box-shadow: 0 8px 24px rgba(43, 56, 47, 0.045) !important;
+}
+
+@media (max-width: 1120px) {
+  [class*="heroVisual"] {
+    height: 680px;
+  }
+}
+
+@media (max-width: 760px) {
+  [class*="heroVisual"] {
+    height: 570px;
+  }
+
+  [class*="heroVisual"] > img {
+    object-position: 62% center;
+  }
+
+  [class*="integrationCard"] {
+    right: 14px !important;
+    bottom: 14px !important;
+  }
+}
+
+@media (max-height: 920px) and (min-width: 981px) {
+  .sidebar-home-visual {
+    display: none;
+  }
+}
