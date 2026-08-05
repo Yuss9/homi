@@ -8,7 +8,7 @@ test("landing page is accessible and responsive", async ({ page, isMobile }) => 
     page.getByRole("heading", { name: /Care for your home,\s*effortlessly/i }),
   ).toBeVisible();
   await expect(
-    page.getByRole("link", { name: /Start your home journal/i }),
+    page.getByRole("link", { name: /Start your home journal/i }).first(),
   ).toBeVisible();
   const marketingHeader = page.locator("header");
   if (!isMobile) {
