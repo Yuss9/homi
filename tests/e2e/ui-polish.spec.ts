@@ -34,7 +34,7 @@ async function selectedHomeId(page: import("@playwright/test").Page) {
   return homeId!;
 }
 
-test("landing exposes the editorial palette, Pexels credit and safe headers", async ({
+test("landing exposes a contained editorial hero and safe headers", async ({
   page,
 }) => {
   const landingResponse = await page.goto("/");
@@ -43,7 +43,33 @@ test("landing exposes the editorial palette, Pexels credit and safe headers", as
     page.getByRole("heading", { name: /Care for your home,\s*effortlessly/i }),
   ).toBeVisible();
   await expect(page.getByText("Photography · Pexels")).toBeVisible();
-  await expect(page.locator("img[src*='images.pexels.com']").first()).toBeVisible();
+
+  const hero = page.locator("[class*='heroVisual']").first();
+  const heroImage = hero.locator("img[src*='images.pexels.com']");
+  const integrationCard = hero.locator("[class*='integrationCard']");
+  await expect(hero).toBeVisible();
+  await expect(heroImage).toBeVisible();
+  await expect(integrationCard).toBeVisible();
+
+  const [heroBox, imageBox, integrationBox] = await Promise.all([
+    hero.boundingBox(),
+    heroImage.boundingBox(),
+    integrationCard.boundingBox(),
+  ]);
+  expect(heroBox).not.toBeNull();
+  expect(imageBox).not.toBeNull();
+  expect(integrationBox).not.toBeNull();
+  expect(Math.abs(imageBox!.width - heroBox!.width)).toBeLessThanOrEqual(1);
+  expect(Math.abs(imageBox!.height - heroBox!.height)).toBeLessThanOrEqual(1);
+  expect(integrationBox!.x).toBeGreaterThanOrEqual(heroBox!.x);
+  expect(integrationBox!.y).toBeGreaterThanOrEqual(heroBox!.y);
+  expect(integrationBox!.x + integrationBox!.width).toBeLessThanOrEqual(
+    heroBox!.x + heroBox!.width + 1,
+  );
+  expect(integrationBox!.y + integrationBox!.height).toBeLessThanOrEqual(
+    heroBox!.y + heroBox!.height + 1,
+  );
+  await expect(heroImage).toHaveCSS("animation-name", "none");
 
   const headers = landingResponse?.headers() ?? {};
   expect(headers["content-security-policy"]).toContain(
@@ -61,7 +87,7 @@ test("landing exposes the editorial palette, Pexels credit and safe headers", as
     .toBe("#607e69");
 });
 
-test("authenticated dashboard and Operations use the new editorial context", async ({
+test("authenticated dashboard and Operations remain visually stable", async ({
   page,
 }) => {
   await selectedHomeId(page);
@@ -72,6 +98,33 @@ test("authenticated dashboard and Operations use the new editorial context", asy
   await expect(
     dashboardAtmosphere.locator("img[src*='images.pexels.com']"),
   ).toHaveAttribute("alt", /home|kitchen|care/i);
+
+  await page.evaluate(async () => {
+    await Promise.all(
+      document.getAnimations().map((animation) =>
+        animation.finished.catch(() => undefined),
+      ),
+    );
+  });
+
+  const dashboardCard = page.locator(".dash-card").first();
+  await expect(dashboardCard).toBeVisible();
+  const beforeHover = await dashboardCard.evaluate((element) => {
+    const style = getComputedStyle(element);
+    return { transform: style.transform, boxShadow: style.boxShadow };
+  });
+  await dashboardCard.hover();
+  await page.waitForTimeout(220);
+  const afterHover = await dashboardCard.evaluate((element) => {
+    const style = getComputedStyle(element);
+    return { transform: style.transform, boxShadow: style.boxShadow };
+  });
+  expect(afterHover).toEqual(beforeHover);
+
+  const ambientAnimation = await page.locator(".app-body").evaluate((element) =>
+    getComputedStyle(element, "::before").animationName,
+  );
+  expect(ambientAnimation).toBe("none");
 
   await page.goto("/operations");
   await expect(
