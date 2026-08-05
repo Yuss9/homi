@@ -47,20 +47,21 @@ export function MotionRuntime() {
             [
               {
                 opacity: 0,
-                transform: "translate3d(0, 24px, 0) scale(0.985)",
-                filter: "blur(8px)",
+                transform: "translate3d(0, 14px, 0)",
               },
               {
                 opacity: 1,
-                transform: "translate3d(0, 0, 0) scale(1)",
-                filter: "blur(0)",
+                transform: "translate3d(0, 0, 0)",
               },
             ],
             {
-              duration: 820,
-              delay: ((revealOrder.get(element) ?? 0) % 8) * 42,
+              duration: 520,
+              delay: ((revealOrder.get(element) ?? 0) % 8) * 28,
               easing: "cubic-bezier(0.16, 1, 0.3, 1)",
-              fill: "both",
+              // Only preserve the opening keyframe during the short delay.
+              // Once complete, CSS owns transform and opacity again so hover,
+              // focus and route updates cannot fight a persistent animation.
+              fill: "backwards",
             },
           );
           observer.unobserve(element);
