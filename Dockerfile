@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1.7
-FROM node:22.17.0-alpine AS dependencies
+FROM node:26.8.1-alpine AS dependencies
 WORKDIR /app
 COPY package.json package-lock.json ./
 RUN --mount=type=cache,target=/root/.npm npm ci
@@ -13,7 +13,7 @@ RUN npm run build
 FROM dependencies AS production-dependencies
 RUN npm prune --omit=dev
 
-FROM node:22.17.0-alpine AS runner
+FROM node:26.8.1-alpine AS runner
 WORKDIR /app
 ENV NODE_ENV=production \
     NEXT_TELEMETRY_DISABLED=1 \
