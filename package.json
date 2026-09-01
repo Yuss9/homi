@@ -75,7 +75,7 @@
     "prettier": "^3.6.2",
     "react-server-dom-webpack": "19.2.8",
     "tsx": "^4.20.3",
-    "typescript": "5.9.3",
+    "typescript": "7.0.2",
     "vinext": "0.2.1",
     "vite": "8.0.13",
     "vitest": "^4.1.10",
