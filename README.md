@@ -26,7 +26,9 @@ different family members. Homi gives it a durable structure:
 - appliances, systems, furniture, warranties, and serial numbers;
 - recurring maintenance with completion history and reminders;
 - repairs, providers, notes, and costs;
-- private PDF and image storage;
+- private PDF and image storage, with equipment photo galleries;
+- shared household shopping lists with quantities and mobile check-off;
+- upcoming warranty coverage on the live dashboard;
 - household roles: owner, admin, member, and viewer;
 - email verification, password reset, and session management;
 - account and home data export;

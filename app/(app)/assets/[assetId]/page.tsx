@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { and, desc, eq, isNull } from "drizzle-orm";
+import { and, desc, eq, isNull, sql } from "drizzle-orm";
 import { FileText, Package, Wrench } from "lucide-react";
 import { db } from "@/db";
 import {
@@ -9,6 +9,7 @@ import {
   maintenanceRecords,
   repairRecords,
 } from "@/db/schema";
+import { AssetPhotos } from "@/src/components/asset-photos";
 import { AssetEditor } from "@/src/components/asset-editor";
 import { AssetShortcutCard } from "@/src/components/asset-shortcut-card";
 import { requireVerifiedPageUser } from "@/src/server/authorization/page";
@@ -23,7 +24,7 @@ export default async function Page({
   const { assetId } = await params;
   const session = await requireVerifiedPageUser();
   const [asset] = await db
-    .select({ asset: assets })
+    .select({ asset: assets, role: homeMembers.role })
     .from(assets)
     .innerJoin(homeMembers, eq(homeMembers.homeId, assets.homeId))
     .where(
@@ -52,7 +53,12 @@ export default async function Page({
     db
       .select()
       .from(documents)
-      .where(eq(documents.assetId, assetId))
+      .where(
+        and(
+          eq(documents.assetId, assetId),
+          sql`"documents"."archived_at" is null`,
+        ),
+      )
       .orderBy(desc(documents.createdAt))
       .limit(20),
   ]);
@@ -125,7 +131,16 @@ export default async function Page({
           </dl>
         </section>
 
-        <AssetEditor asset={item} />
+        {["OWNER", "ADMIN"].includes(asset.role) && (
+          <AssetEditor asset={item} />
+        )}
+
+        <AssetPhotos
+          homeId={item.homeId}
+          assetId={item.id}
+          photos={files.filter((file) => file.type === "PHOTO")}
+          canEdit={asset.role !== "VIEWER"}
+        />
 
         <AssetShortcutCard assetId={item.id} assetName={item.name} />
 
@@ -187,7 +202,9 @@ export default async function Page({
                 <FileText size={16} />
               </span>
               <div>
-                <strong>{file.title}</strong>
+                <a href={`/api/files/${file.fileId}`}>
+                  <strong>{file.title}</strong>
+                </a>
                 <small>{file.type.toLowerCase()}</small>
               </div>
             </div>

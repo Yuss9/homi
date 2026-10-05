@@ -9,6 +9,8 @@ import {
   Package,
   Plus,
   ShieldCheck,
+  ShoppingBasket,
+  Download,
   Sparkles,
   TriangleAlert,
   Wrench,
@@ -37,10 +39,7 @@ export default async function DashboardPage() {
       .from(homeMembers)
       .innerJoin(homes, eq(homes.id, homeMembers.homeId))
       .where(
-        and(
-          eq(homeMembers.userId, session.user.id),
-          isNull(homes.archivedAt),
-        ),
+        and(eq(homeMembers.userId, session.user.id), isNull(homes.archivedAt)),
       ),
     getExperiencePreferences(session.user.id),
   ]);
@@ -75,7 +74,7 @@ export default async function DashboardPage() {
     ? await getConnectedHomeSummary(membership.home.id)
     : null;
   const unread = membership
-    ? (
+    ? ((
         await db
           .select({ value: count() })
           .from(notifications)
@@ -90,7 +89,7 @@ export default async function DashboardPage() {
               isNull(notifications.dismissedAt),
             ),
           )
-      )[0]?.value ?? 0
+      )[0]?.value ?? 0)
     : 0;
 
   const widgets = summary
@@ -108,7 +107,9 @@ export default async function DashboardPage() {
                 const overdue = due < now;
                 return (
                   <Link className="dash-task" href={task.url} key={task.id}>
-                    <span><Wrench size={16} /></span>
+                    <span>
+                      <Wrench size={16} />
+                    </span>
                     <div>
                       <strong>{task.title}</strong>
                       <small>
@@ -128,41 +129,89 @@ export default async function DashboardPage() {
               })
             ) : (
               <div className="dash-task">
-                <span><CalendarDays size={16} /></span>
-                <div><strong>No maintenance scheduled</strong><small>Your schedule is clear.</small></div>
+                <span>
+                  <CalendarDays size={16} />
+                </span>
+                <div>
+                  <strong>No maintenance scheduled</strong>
+                  <small>Your schedule is clear.</small>
+                </div>
               </div>
             )}
           </section>
         ),
         summary: (
           <section className="dash-card" key="summary">
-            <div className="dash-card-head"><h2>At a glance</h2><Link href="/assets">{dictionary.assets}</Link></div>
+            <div className="dash-card-head">
+              <h2>At a glance</h2>
+              <Link href="/assets">{dictionary.assets}</Link>
+            </div>
             <div className="summary-grid">
-              <div className="summary-cell"><Package size={16} /><strong>{summary.metrics.assets}</strong><span>{dictionary.assets}</span></div>
-              <div className="summary-cell"><CalendarDays size={16} /><strong>{summary.metrics.maintenanceTasks}</strong><span>{dictionary.tasks}</span></div>
-              <div className="summary-cell"><FileText size={16} /><strong>{summary.metrics.documents}</strong><span>{dictionary.documents}</span></div>
-              <div className="summary-cell"><ShieldCheck size={16} /><strong>{unread}</strong><span>{dictionary.notifications}</span></div>
+              <div className="summary-cell">
+                <Package size={16} />
+                <strong>{summary.metrics.assets}</strong>
+                <span>{dictionary.assets}</span>
+              </div>
+              <div className="summary-cell">
+                <CalendarDays size={16} />
+                <strong>{summary.metrics.maintenanceTasks}</strong>
+                <span>{dictionary.tasks}</span>
+              </div>
+              <div className="summary-cell">
+                <FileText size={16} />
+                <strong>{summary.metrics.documents}</strong>
+                <span>{dictionary.documents}</span>
+              </div>
+              <div className="summary-cell">
+                <ShieldCheck size={16} />
+                <strong>{unread}</strong>
+                <span>{dictionary.notifications}</span>
+              </div>
             </div>
           </section>
         ),
         repairs: (
           <section className="dash-card" key="repairs">
-            <div className="dash-card-head"><h2>{dictionary.repairs}</h2><Link href="/repairs">Open</Link></div>
-            {summary.openRepairItems.length ? summary.openRepairItems.slice(0, 3).map((repair) => (
-              <Link className="dash-task" href={repair.url} key={repair.id}>
-                <span><TriangleAlert size={16} /></span>
-                <div><strong>{repair.title}</strong><small>{repair.status.toLowerCase().replaceAll("_", " ")}</small></div>
-                <time>{repair.issueDate}</time>
-              </Link>
-            )) : <p className="muted-copy">No open repairs.</p>}
+            <div className="dash-card-head">
+              <h2>{dictionary.repairs}</h2>
+              <Link href="/repairs">Open</Link>
+            </div>
+            {summary.openRepairItems.length ? (
+              summary.openRepairItems.slice(0, 3).map((repair) => (
+                <Link className="dash-task" href={repair.url} key={repair.id}>
+                  <span>
+                    <TriangleAlert size={16} />
+                  </span>
+                  <div>
+                    <strong>{repair.title}</strong>
+                    <small>
+                      {repair.status.toLowerCase().replaceAll("_", " ")}
+                    </small>
+                  </div>
+                  <time>{repair.issueDate}</time>
+                </Link>
+              ))
+            ) : (
+              <p className="muted-copy">No open repairs.</p>
+            )}
           </section>
         ),
         costs: (
           <section className="dash-card dashboard-cost-card" key="costs">
-            <div className="dash-card-head"><h2>{dictionary.costs}</h2><Coins size={17} /></div>
-            <strong>{new Intl.NumberFormat(locale, { style: "currency", currency: summary.home.currency }).format(summary.metrics.monthlyCosts)}</strong>
+            <div className="dash-card-head">
+              <h2>{dictionary.costs}</h2>
+              <Coins size={17} />
+            </div>
+            <strong>
+              {new Intl.NumberFormat(locale, {
+                style: "currency",
+                currency: summary.home.currency,
+              }).format(summary.metrics.monthlyCosts)}
+            </strong>
             <p>Maintenance and repairs recorded this month.</p>
-            <Link className="button button-secondary" href="/costs">Open cost insights</Link>
+            <Link className="button button-secondary" href="/costs">
+              Open cost insights
+            </Link>
           </section>
         ),
       }
@@ -173,7 +222,9 @@ export default async function DashboardPage() {
       <div className="dashboard-head" data-reveal>
         <div>
           <small>{dateLabel}</small>
-          <h1>{greeting}, {session.user.name.split(" ")[0]}.</h1>
+          <h1>
+            {greeting}, {session.user.name.split(" ")[0]}.
+          </h1>
           <p>
             {membership
               ? `${membership.home.name} ${dictionary.homeReady}`
@@ -187,7 +238,11 @@ export default async function DashboardPage() {
       </div>
 
       {membership ? (
-        <section className="dashboard-atmosphere" data-reveal aria-label="Home care overview">
+        <section
+          className="dashboard-atmosphere"
+          data-reveal
+          aria-label="Home care overview"
+        >
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src="https://images.pexels.com/photos/7512985/pexels-photo-7512985.jpeg?auto=compress&cs=tinysrgb&w=1800"
@@ -198,17 +253,26 @@ export default async function DashboardPage() {
           />
           <div className="dashboard-atmosphere-copy">
             <small>Today at {membership.home.name}</small>
-            <h2>{summary?.health.title ?? "A clear place for everything your home needs."}</h2>
+            <h2>
+              {summary?.health.title ??
+                "A clear place for everything your home needs."}
+            </h2>
             <p>
               {summary?.health.summary ??
                 "Add equipment, routines and documents once, then let Homi keep the household memory close."}
             </p>
-            <Link className="button button-light button-small" href="/maintenance">
+            <Link
+              className="button button-light button-small"
+              href="/maintenance"
+            >
               Open maintenance <ArrowRight size={15} />
             </Link>
           </div>
           <div className="dashboard-atmosphere-badge">
-            <Sparkles size={14} /> {summary ? `${summary.health.score}/100 home health` : "Ready to begin"}
+            <Sparkles size={14} />{" "}
+            {summary
+              ? `${summary.health.score}/100 home health`
+              : "Ready to begin"}
           </div>
         </section>
       ) : null}
@@ -216,11 +280,62 @@ export default async function DashboardPage() {
       {summary && widgets ? (
         <div className="personalized-dashboard">
           {experience.dashboardWidgets.map((widget) => widgets[widget])}
+          <section className="dash-card" data-reveal>
+            <div className="dash-card-head">
+              <h2>Warranties ending soon</h2>
+              <ShieldCheck size={17} />
+            </div>
+            <p className="muted-copy">
+              The next 30 days · {summary.metrics.warrantiesExpiringSoon}{" "}
+              warranties
+            </p>
+            {summary.expiringWarranties.length ? (
+              summary.expiringWarranties.map((asset) => (
+                <Link className="dash-task" href={asset.url} key={asset.id}>
+                  <span>
+                    <ShieldCheck size={16} />
+                  </span>
+                  <div>
+                    <strong>{asset.name}</strong>
+                    <small>Review your coverage and receipt</small>
+                  </div>
+                  <time>{asset.warrantyEndDate}</time>
+                </Link>
+              ))
+            ) : (
+              <p className="muted-copy">
+                No warranties end in the next 30 days.
+              </p>
+            )}
+          </section>
+          <section className="dash-card" data-reveal>
+            <div className="dash-card-head">
+              <h2>Household shortcuts</h2>
+              <ShoppingBasket size={17} />
+            </div>
+            <div className="inline-actions">
+              <Link className="button button-secondary" href="/shopping">
+                <ShoppingBasket size={16} />
+                Shopping lists
+              </Link>
+              <a className="button button-secondary" href="/api/export/account">
+                <Download size={16} />
+                Export my data
+              </a>
+            </div>
+          </section>
         </div>
       ) : (
         <div className="dash-status">
-          <span className="status-orb"><ShieldCheck size={25} /></span>
-          <div><h2>Your home journal is ready to begin</h2><p>Add a home to start tracking equipment, maintenance, and files.</p></div>
+          <span className="status-orb">
+            <ShieldCheck size={25} />
+          </span>
+          <div>
+            <h2>Your home journal is ready to begin</h2>
+            <p>
+              Add a home to start tracking equipment, maintenance, and files.
+            </p>
+          </div>
           <span>Home health · Not configured</span>
         </div>
       )}

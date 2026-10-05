@@ -3,6 +3,7 @@ import { defineConfig } from "drizzle-kit";
 export default defineConfig({
   schema: [
     "./db/schema.ts",
+    "./db/shopping-schema.ts",
     "./db/high-value-schema.ts",
     "./db/connected-platform-schema.ts",
   ],

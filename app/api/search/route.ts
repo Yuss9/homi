@@ -1,10 +1,8 @@
 import { and, eq, ilike, isNull, or, sql } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "@/db";
-import {
-  assetIdentifiers,
-  documentOcr,
-} from "@/db/connected-platform-schema";
+import { shoppingLists, shoppingItems } from "@/db/shopping-schema";
+import { assetIdentifiers, documentOcr } from "@/db/connected-platform-schema";
 import { maintenanceTemplates } from "@/db/high-value-schema";
 import {
   assets,
@@ -65,6 +63,7 @@ export async function GET(request: Request) {
       documentRows,
       memberRows,
       templateRows,
+      shoppingRows,
     ] = await Promise.all([
       db
         .select({
@@ -204,9 +203,42 @@ export async function GET(request: Request) {
           ),
         )
         .limit(8),
+      db
+        .select({
+          id: shoppingLists.id,
+          title: shoppingLists.name,
+          itemName: shoppingItems.name,
+        })
+        .from(shoppingLists)
+        .leftJoin(shoppingItems, eq(shoppingItems.listId, shoppingLists.id))
+        .where(
+          and(
+            eq(shoppingLists.homeId, body.homeId),
+            or(
+              ilike(shoppingLists.name, pattern),
+              ilike(shoppingItems.name, pattern),
+            ),
+          ),
+        )
+        .limit(12),
     ]);
 
     const allResults: Result[] = [
+      ...Array.from(
+        new Map(
+          shoppingRows.map((list) => [
+            list.id,
+            {
+              id: `shopping:${list.id}`,
+              type: "Shopping",
+              status: "ACTIVE",
+              title: list.title,
+              subtitle: list.itemName ?? "Shared household list",
+              href: `/shopping?list=${list.id}`,
+            },
+          ]),
+        ).values(),
+      ),
       ...assetRows.map((asset) => ({
         id: `asset:${asset.id}`,
         type: "Asset",
@@ -269,14 +301,17 @@ export async function GET(request: Request) {
       })),
     ];
 
-    const selectedTypes = new Set(body.types.map((value) => value.toLowerCase()));
+    const selectedTypes = new Set(
+      body.types.map((value) => value.toLowerCase()),
+    );
     const selectedStatuses = new Set(
       body.statuses.map((value) => value.toLowerCase()),
     );
     const results = allResults
       .filter(
         (result) =>
-          (!selectedTypes.size || selectedTypes.has(result.type.toLowerCase())) &&
+          (!selectedTypes.size ||
+            selectedTypes.has(result.type.toLowerCase())) &&
           (!selectedStatuses.size ||
             selectedStatuses.has(result.status.toLowerCase())),
       )
