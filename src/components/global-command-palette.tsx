@@ -14,6 +14,7 @@ import {
   Package,
   Plus,
   Search,
+  ShoppingBasket,
   Trash2,
   Users,
   Wrench,
@@ -46,6 +47,12 @@ type SavedSearch = {
 type Facet = { value: string; count: number };
 
 const quickLinks: QuickLink[] = [
+  {
+    title: "Shopping lists",
+    subtitle: "Shared groceries and household essentials",
+    href: "/shopping",
+    icon: ShoppingBasket,
+  },
   {
     title: "Scan equipment",
     subtitle: "Find or pair an asset with the camera",
@@ -111,7 +118,11 @@ async function fetchSavedSearches(homeId: string) {
   return (payload.searches ?? []) as SavedSearch[];
 }
 
-export function GlobalCommandPalette({ selectedHomeId }: { selectedHomeId: string }) {
+export function GlobalCommandPalette({
+  selectedHomeId,
+}: {
+  selectedHomeId: string;
+}) {
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
   const [open, setOpen] = useState(false);
@@ -179,7 +190,8 @@ export function GlobalCommandPalette({ selectedHomeId }: { selectedHomeId: strin
           setActiveIndex(0);
         })
         .catch((error) => {
-          if (error instanceof DOMException && error.name === "AbortError") return;
+          if (error instanceof DOMException && error.name === "AbortError")
+            return;
           setResults([]);
         })
         .finally(() => setLoading(false));
@@ -365,7 +377,9 @@ export function GlobalCommandPalette({ selectedHomeId }: { selectedHomeId: strin
                       {facets.statuses.slice(0, 8).map((facet) => (
                         <button
                           className={
-                            selectedStatuses.includes(facet.value) ? "active" : ""
+                            selectedStatuses.includes(facet.value)
+                              ? "active"
+                              : ""
                           }
                           type="button"
                           key={facet.value}
@@ -375,7 +389,8 @@ export function GlobalCommandPalette({ selectedHomeId }: { selectedHomeId: strin
                             )
                           }
                         >
-                          {facet.value.replaceAll("_", " ").toLowerCase()} {facet.count}
+                          {facet.value.replaceAll("_", " ").toLowerCase()}{" "}
+                          {facet.count}
                         </button>
                       ))}
                     </div>
@@ -409,7 +424,8 @@ export function GlobalCommandPalette({ selectedHomeId }: { selectedHomeId: strin
                     </div>
                     {isResult && (
                       <b>
-                        {item.type} · {item.status.replaceAll("_", " ").toLowerCase()}
+                        {item.type} ·{" "}
+                        {item.status.replaceAll("_", " ").toLowerCase()}
                       </b>
                     )}
                   </button>

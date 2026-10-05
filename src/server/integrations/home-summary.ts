@@ -67,6 +67,7 @@ export async function getConnectedHomeSummary(homeId: string) {
     documentExpiryRows,
     maintenanceCostRows,
     repairCostRows,
+    expiringAssets,
   ] = await Promise.all([
     db
       .select({
@@ -222,6 +223,23 @@ export async function getConnectedHomeSummary(homeId: string) {
           gte(repairRecords.createdAt, monthStart),
         ),
       ),
+    db
+      .select({
+        id: assets.id,
+        name: assets.name,
+        warrantyEndDate: assets.warrantyEndDate,
+      })
+      .from(assets)
+      .where(
+        and(
+          eq(assets.homeId, homeId),
+          isNull(assets.archivedAt),
+          gte(assets.warrantyEndDate, today),
+          lte(assets.warrantyEndDate, inThirtyDays),
+        ),
+      )
+      .orderBy(asc(assets.warrantyEndDate))
+      .limit(5),
   ]);
 
   const metrics = {
@@ -266,6 +284,10 @@ export async function getConnectedHomeSummary(homeId: string) {
     openRepairItems: repairRows.map((repair) => ({
       ...repair,
       url: `/repairs?repair=${repair.id}`,
+    })),
+    expiringWarranties: expiringAssets.map((asset) => ({
+      ...asset,
+      url: `/assets/${asset.id}`,
     })),
     quickActions: {
       scan: "/scan",

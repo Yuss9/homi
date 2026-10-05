@@ -4,6 +4,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import { MotionRuntime } from "@/src/components/motion-runtime";
 import { PwaRuntime } from "@/src/components/pwa-runtime";
 import "./globals.css";
+import "./shopping.css";
 import "./resource-management.css";
 import "./household-profile.css";
 import "./high-value-tools.css";
@@ -99,7 +100,8 @@ export default async function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   const localeCookie = (await cookies()).get("homi-locale")?.value;
-  const locale = localeCookie === "fr" || localeCookie === "de" ? localeCookie : "en";
+  const locale =
+    localeCookie === "fr" || localeCookie === "de" ? localeCookie : "en";
   return (
     <html lang={locale} suppressHydrationWarning>
       <body className={`${geistSans.variable} ${geistMono.variable}`}>

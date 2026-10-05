@@ -16,6 +16,7 @@ import {
   Library,
   Package,
   Settings,
+  ShoppingBasket,
   ShieldCheck,
   TriangleAlert,
   Users,
@@ -43,6 +44,7 @@ const navigation = [
   ["/repairs", "repairs", Wrench],
   ["/costs", "costs", Coins],
   ["/documents", "documents", FileText],
+  ["/shopping", "shopping", ShoppingBasket],
   ["/members", "household", Users],
 ] as const;
 
@@ -141,7 +143,10 @@ export function AppShell({
           ))}
         </nav>
         <div className="sidebar-bottom">
-          <div className="sidebar-home-visual" aria-label="A well cared for home">
+          <div
+            className="sidebar-home-visual"
+            aria-label="A well cared for home"
+          >
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src="https://images.pexels.com/photos/7587880/pexels-photo-7587880.jpeg?auto=compress&cs=tinysrgb&w=700"
@@ -201,7 +206,7 @@ export function AppShell({
         {[
           ["/dashboard", dictionary.home, LayoutDashboard],
           ["/calendar", dictionary.calendar, CalendarDays],
-          ["/scan", dictionary.scan, Camera],
+          ["/shopping", dictionary.shopping, ShoppingBasket],
           ["/maintenance", dictionary.tasks, Wrench],
           ["/settings", dictionary.settings, Settings],
         ].map(([href, mobileLabel, Icon]) => (
