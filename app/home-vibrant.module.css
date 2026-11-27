@@ -844,6 +844,37 @@
   .trustAvatars span { border-color: #151815; }
   .storyChore { border-color: #151815; }
   .footer { color: #8e998f; }
+  .floatCard,
+  .healthCard,
+  .scanCard,
+  .integrationCard,
+  .phoneCard,
+  .storyBadge {
+    border-color: rgba(255, 255, 255, 0.1);
+    background: rgba(31, 37, 32, 0.84);
+  }
+  .phoneTask { background: rgba(255, 255, 255, 0.06); }
+  .featureCard:nth-child(3n + 2) { background: radial-gradient(circle at 100% 0%, rgba(102, 137, 174, 0.14), transparent 44%), rgba(31, 37, 32, 0.84); }
+  .featureCard:nth-child(3n) { background: radial-gradient(circle at 100% 0%, rgba(180, 125, 66, 0.14), transparent 44%), rgba(31, 37, 32, 0.84); }
+  .featureCard:nth-child(5) { background: radial-gradient(circle at 100% 0%, rgba(128, 110, 163, 0.15), transparent 44%), rgba(31, 37, 32, 0.84); }
+  .featureCard p { color: #9fa9a1; }
+  /* Icon chips and avatars: pastel light-theme tints. */
+  .trustAvatars span,
+  .railIcon,
+  .featureCard > span,
+  .phoneTask > span,
+  .everydayList div:nth-child(2) > span:first-child { color: #8fb39b; background: #27372d; }
+  .floatTask > span,
+  .integrationCard > span,
+  .railItem:nth-child(4n + 2) .railIcon,
+  .featureCard:nth-child(3n + 2) > span,
+  .everydayList > div > span:first-child { color: #8fb0d4; background: #253241; }
+  .floatTask:nth-child(4) > span,
+  .railItem:nth-child(4n + 3) .railIcon,
+  .featureCard:nth-child(3n) > span,
+  .everydayList div:nth-child(3) > span:first-child { color: #d2a46e; background: #3d3021; }
+  .railItem:nth-child(4n) .railIcon,
+  .featureCard:nth-child(5) > span { color: #ac9bd0; background: #332c42; }
 }
 
 @media (prefers-reduced-motion: reduce) {
