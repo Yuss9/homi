@@ -1,0 +1,210 @@
+/*
+ * Dark mode completion.
+ *
+ * globals.css, visual-system.css and ui-polish.css each have a dark-mode block, but
+ * several light-theme rules have no dark counterpart: white or pale card
+ * backgrounds, light gradients, dark text colours, and palette variables defined for
+ * light pages only. This file supplies those counterparts. It is imported last
+ * (app/layout.tsx), so each rule wins over the light rule it corrects at equal
+ * specificity.
+ */
+@media (prefers-color-scheme: dark) {
+  /* Palette. The mid-tone accents are tuned for light pages and fall below 3:1 as
+     icon and text colours on dark surfaces, so dark mode gets lighter tones. The
+     -deep tones stay (they are button backgrounds); --homi-sage-text replaces them
+     where they are used as a text colour. */
+  :root {
+    --homi-sage: #8fb39b;
+    --homi-sky: #8fb0d4;
+    --homi-sand: #d2a46e;
+    --homi-coral: #d99b87;
+    --homi-lilac: #ac9bd0;
+    --homi-mint: #7dbaa9;
+    --homi-sage-text: #a9c7b2;
+    /* --brand-deep is only ever a text colour. */
+    --brand-deep: var(--homi-sage-text);
+
+    --accent-blue: #8fb0d4;
+    --accent-blue-soft: #253241;
+    --accent-green: #8bbb9f;
+    --accent-green-soft: #24362b;
+    --accent-amber: #d2a46e;
+    --accent-amber-soft: #3d3021;
+    --accent-violet: #ac9bd0;
+    --accent-violet-soft: #332c42;
+    --accent-rose: #d49ca4;
+    --accent-rose-soft: #3f2a2e;
+
+    --background: var(--paper);
+  }
+
+  /* Deep sage used as a text colour. */
+  .app-sidebar .brand,
+  .home-switcher > span:first-child,
+  .icon-button:hover,
+  .icon-action:hover,
+  .button-secondary:hover,
+  .button-ghost:hover {
+    color: var(--homi-sage-text);
+  }
+
+  /* Product shell. */
+  .app-body {
+    background:
+      radial-gradient(circle at 13% 2%, rgba(96, 126, 105, 0.12), transparent 31rem),
+      radial-gradient(circle at 89% 12%, rgba(128, 110, 163, 0.09), transparent 28rem),
+      var(--paper);
+  }
+
+  .app-nav a {
+    color: var(--ink-soft);
+  }
+
+  .app-nav a.active {
+    border-color: rgba(143, 179, 155, 0.16);
+    background: linear-gradient(105deg, rgba(143, 179, 155, 0.16), rgba(255, 255, 255, 0.04));
+    box-shadow: inset 0 1px rgba(255, 255, 255, 0.05);
+    color: var(--ink);
+  }
+
+  .icon-button {
+    color: var(--ink-soft);
+  }
+
+  .dashboard-head h1 {
+    color: var(--ink);
+  }
+
+  /* Cards: visual-system.css tints each card with a gradient over white, using
+     nth-child selectors that outrank its own dark .dash-card rule. */
+  .personalized-dashboard > :nth-child(4n + 1),
+  .dash-grid > :nth-child(4n + 1) {
+    background:
+      radial-gradient(circle at 100% 0%, rgba(96, 126, 105, 0.16), transparent 42%),
+      rgba(31, 37, 32, 0.86);
+  }
+
+  .personalized-dashboard > :nth-child(4n + 2),
+  .dash-grid > :nth-child(4n + 2) {
+    background:
+      radial-gradient(circle at 100% 0%, rgba(102, 137, 174, 0.15), transparent 42%),
+      rgba(31, 37, 32, 0.86);
+  }
+
+  .personalized-dashboard > :nth-child(4n + 3),
+  .dash-grid > :nth-child(4n + 3) {
+    background:
+      radial-gradient(circle at 100% 0%, rgba(180, 125, 66, 0.13), transparent 42%),
+      rgba(31, 37, 32, 0.86);
+  }
+
+  .personalized-dashboard > :nth-child(4n),
+  .dash-grid > :nth-child(4n) {
+    background:
+      radial-gradient(circle at 100% 0%, rgba(128, 110, 163, 0.14), transparent 42%),
+      rgba(31, 37, 32, 0.86);
+  }
+
+  /* Cards whose siblings visual-system.css's dark block already re-darkens. */
+  .dash-status,
+  .document-row,
+  .cost-summary-card,
+  .install-platform-grid article,
+  .install-features article {
+    background-color: rgba(31, 37, 32, 0.86);
+  }
+
+  .dash-task:hover {
+    background: rgba(255, 255, 255, 0.04);
+  }
+
+  .tag-chip,
+  .document-tags i,
+  .template-meta span,
+  .task-not-due {
+    box-shadow: inset 0 1px rgba(255, 255, 255, 0.04);
+  }
+
+  /* Icon disc in status rows (onboarding, dashboard health). */
+  .status-orb {
+    border-color: var(--line);
+    background: rgba(255, 255, 255, 0.06);
+    color: var(--homi-sage-text);
+  }
+
+  .operations-guide-inner {
+    background: var(--surface);
+  }
+
+  /* Forms. */
+  .field label {
+    color: var(--ink-soft);
+  }
+
+  /* The base :focus rule sets a white background under light text. */
+  .field input:focus,
+  .field select:focus,
+  .field textarea:focus {
+    background: #242623;
+  }
+
+  /* Messages and toasts: pastel backgrounds with dark text. */
+  .form-error {
+    border-color: rgba(217, 155, 135, 0.3);
+    background: #3a2622;
+    color: #f0b6a9;
+  }
+
+  .form-success {
+    border-color: rgba(139, 187, 159, 0.3);
+    background: #1f3328;
+    color: #a9d6bb;
+  }
+
+  .action-feedback.is-success .feedback-icon {
+    background: #1f3328;
+    color: #a9d6bb;
+  }
+
+  .action-feedback.is-error .feedback-icon {
+    background: #3a2622;
+    color: #f0b6a9;
+  }
+
+  /* Calendar event chips (high-value-tools.css). */
+  .calendar-day-events i[data-event="repair"],
+  .calendar-day-events i[data-event="repair_date"] {
+    background: var(--homi-sand-soft);
+    color: var(--homi-sand);
+  }
+
+  .calendar-day-events i[data-event="warranty"],
+  .calendar-day-events i[data-event="document"] {
+    background: var(--homi-lilac-soft);
+    color: var(--homi-lilac);
+  }
+
+  .calendar-day-events i[data-event="completed"] {
+    background: var(--homi-sage-soft);
+    color: var(--homi-sage-text);
+  }
+
+  /* Calendar: today's date uses --ink, the text colour, as its background. */
+  .calendar-day.today > span {
+    background: var(--homi-sage-text);
+    color: #161715;
+  }
+
+  /* Public pages. */
+  .desktop-nav a,
+  .text-link {
+    color: var(--ink-soft);
+  }
+}
+
+@media (prefers-color-scheme: dark) and (max-width: 720px) {
+  /* Phone bottom navigation (globals.css, max-width: 720px). */
+  .mobile-bottom-nav {
+    background: rgba(22, 26, 22, 0.94);
+  }
+}
